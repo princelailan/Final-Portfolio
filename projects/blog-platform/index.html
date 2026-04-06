@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DevBlog — Full-Stack MERN Blog Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#f8f7f4;--card:#fff;--dark:#0d1220;--gold:#e8a830;--cyan:#0077cc;--text:#1a1e2e;--dim:#6b7280;--border:#e5e7eb;--mono:'Space Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* Header */
+    .header{background:var(--dark);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .logo{font-family:var(--mono);font-size:1rem;color:var(--gold);letter-spacing:2px;}
+    .nav{display:flex;gap:1.5rem;align-items:center;}
+    .nav a{font-family:var(--mono);font-size:.75rem;color:#7a8499;transition:color .2s;}
+    .nav a:hover{color:var(--gold);}
+    .auth-area{display:flex;gap:.7rem;align-items:center;}
+    .btn-sm{padding:.4rem .9rem;font-family:var(--mono);font-size:.72rem;border-radius:4px;cursor:pointer;border:none;transition:all .2s;}
+    .btn-outline{background:transparent;border:1px solid #2a3f5f;color:#7a8499;}
+    .btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+    .btn-solid{background:var(--gold);color:#060910;font-weight:700;}
+    .btn-solid:hover{filter:brightness(1.1);}
+    .back-link{font-family:var(--mono);font-size:.72rem;color:#7a8499;margin-right:1rem;}
+
+    /* Views */
+    .view{display:none;}
+    .view.active{display:block;}
+
+    /* HOME VIEW */
+    .hero-blog{background:var(--dark);padding:5rem 2rem;text-align:center;color:#e8eaf0;}
+    .hero-blog h1{font-family:var(--display);font-size:clamp(2.5rem,6vw,4rem);font-weight:800;margin-bottom:1rem;}
+    .hero-blog h1 span{color:var(--gold);}
+    .hero-blog p{color:#7a8499;font-size:1.05rem;max-width:500px;margin:0 auto 2rem;}
+    .search-bar{display:flex;max-width:480px;margin:0 auto;gap:.5rem;}
+    .search-input{flex:1;padding:.75rem 1rem;background:#0d1825;border:1px solid #1e2d45;border-radius:6px;color:#e8eaf0;font-family:var(--mono);font-size:.82rem;outline:none;}
+    .search-input:focus{border-color:var(--gold);}
+    .search-input::placeholder{color:#3d4860;}
+    .btn-search{padding:.75rem 1.2rem;background:var(--gold);color:#060910;border:none;border-radius:6px;font-family:var(--mono);font-size:.78rem;font-weight:700;cursor:pointer;}
+
+    .categories{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;padding:1.5rem;background:#f0ede8;}
+    .cat-btn{padding:.35rem .9rem;border-radius:100px;font-family:var(--mono);font-size:.72rem;background:var(--card);border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .2s;}
+    .cat-btn.active,
+    .cat-btn:hover{background:var(--dark);color:var(--gold);border-color:var(--dark);}
+
+    .posts-container{max-width:1200px;margin:0 auto;padding:2.5rem 2rem;}
+    .posts-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+    .posts-header h2{font-family:var(--display);font-size:1.4rem;font-weight:800;}
+    .posts-count{font-family:var(--mono);font-size:.75rem;color:var(--dim);}
+    .posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;}
+
+    .post-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .25s;cursor:pointer;}
+    .post-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.1);}
+    .post-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;}
+    .post-body{padding:1.2rem;}
+    .post-meta{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;}
+    .post-category{padding:.2rem .6rem;border-radius:4px;font-family:var(--mono);font-size:.65rem;font-weight:700;}
+    .post-date{font-family:var(--mono);font-size:.68rem;color:var(--dim);}
+    .post-read-time{font-family:var(--mono);font-size:.68rem;color:var(--dim);}
+    .post-card h3{font-family:var(--display);font-size:1.05rem;font-weight:700;margin-bottom:.5rem;line-height:1.35;}
+    .post-excerpt{font-size:.85rem;color:var(--dim);line-height:1.6;margin-bottom:1rem;}
+    .post-footer{display:flex;align-items:center;justify-content:space-between;}
+    .post-author{display:flex;align-items:center;gap:.5rem;}
+    .author-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;}
+    .author-name{font-size:.78rem;color:var(--dim);}
+    .post-stats{display:flex;gap:.7rem;font-family:var(--mono);font-size:.7rem;color:var(--dim);}
+
+    .pagination{display:flex;justify-content:center;gap:.5rem;padding:2rem;align-items:center;}
+    .page-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:var(--mono);font-size:.8rem;border:1px solid var(--border);cursor:pointer;background:var(--card);color:var(--dim);transition:all .2s;}
+    .page-btn.active{background:var(--dark);color:var(--gold);border-color:var(--dark);}
+    .page-btn:hover:not(.active){border-color:var(--dark);color:var(--dark);}
+
+    /* POST VIEW */
+    .post-view-header{background:var(--dark);padding:3rem 2rem;color:#e8eaf0;}
+    .post-view-header .breadcrumb{font-family:var(--mono);font-size:.72rem;color:#7a8499;margin-bottom:1rem;}
+    .post-view-header h1{font-family:var(--display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;line-height:1.2;max-width:700px;}
+    .post-view-header .post-meta{margin-top:1rem;}
+    .post-content-wrap{max-width:760px;margin:0 auto;padding:3rem 2rem;}
+    .post-content p{color:#374151;line-height:1.9;font-size:1.02rem;margin-bottom:1.2rem;}
+    .post-content h2{font-family:var(--display);font-size:1.5rem;font-weight:800;margin:2rem 0 .8rem;}
+    .post-content h3{font-family:var(--display);font-size:1.15rem;font-weight:700;margin:1.5rem 0 .5rem;}
+    .post-content pre{background:#0d1220;color:#e8eaf0;padding:1.2rem;border-radius:8px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.7;margin:1.2rem 0;}
+    .post-content code{background:#f3f4f6;color:#dc2626;padding:.1rem .3rem;border-radius:3px;font-family:var(--mono);font-size:.85em;}
+    .post-content blockquote{border-left:3px solid var(--gold);padding:.8rem 1.2rem;background:#fffbf0;border-radius:0 8px 8px 0;margin:1.2rem 0;color:#4b5563;font-style:italic;}
+
+    .comments-section{max-width:760px;margin:0 auto;padding:2rem;border-top:1px solid var(--border);}
+    .comments-section h3{font-family:var(--display);font-size:1.2rem;font-weight:800;margin-bottom:1.5rem;}
+    .comment-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1rem;}
+    .comment-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;}
+    .comment-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0;}
+    .comment-meta{flex:1;}
+    .comment-name{font-weight:600;font-size:.88rem;}
+    .comment-time{font-family:var(--mono);font-size:.68rem;color:var(--dim);}
+    .comment-text{font-size:.88rem;color:#374151;line-height:1.6;}
+    .comment-actions{display:flex;gap:1rem;margin-top:.6rem;}
+    .comment-btn{font-family:var(--mono);font-size:.68rem;color:var(--dim);background:none;border:none;cursor:pointer;transition:color .2s;}
+    .comment-btn:hover{color:var(--cyan);}
+
+    .new-comment{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-top:1.5rem;}
+    .new-comment h4{font-family:var(--display);font-size:.95rem;font-weight:700;margin-bottom:1rem;}
+    .comment-input-row{display:flex;gap:.7rem;margin-bottom:.8rem;}
+    .comment-input{flex:1;padding:.6rem .9rem;border:1px solid var(--border);border-radius:6px;font-family:var(--body);font-size:.88rem;outline:none;background:var(--bg);}
+    .comment-input:focus{border-color:var(--gold);}
+    .comment-textarea{width:100%;padding:.7rem .9rem;border:1px solid var(--border);border-radius:6px;font-family:var(--body);font-size:.88rem;outline:none;background:var(--bg);resize:none;margin-bottom:.8rem;}
+    .comment-textarea:focus{border-color:var(--gold);}
+    .btn-comment{padding:.6rem 1.4rem;background:var(--dark);color:var(--gold);font-family:var(--mono);font-size:.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .2s;}
+    .btn-comment:hover{background:var(--gold);color:var(--dark);}
+
+    @media(max-width:768px){.posts-grid{grid-template-columns:1fr;}.nav{display:none;}.hero-blog{padding:3rem 1.5rem;}}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="../../index.html" class="back-link">← Portfolio</a>
+      <div class="logo">DevBlog</div>
+    </div>
+    <nav class="nav">
+      <a href="#" onclick="showView('home')">Home</a>
+      <a href="#">Tech</a>
+      <a href="#">Tutorials</a>
+      <a href="#">About</a>
+    </nav>
+    <div class="auth-area">
+      <button class="btn-sm btn-outline" onclick="toggleAuth()">Sign In</button>
+      <button class="btn-sm btn-solid" onclick="showWritePost()">+ Write Post</button>
+    </div>
+  </div>
+
+  <!-- HOME VIEW -->
+  <div class="view active" id="view-home">
+    <div class="hero-blog">
+      <h1>Ideas Worth <span>Reading</span></h1>
+      <p>A developer-first blog platform. Explore tech insights, tutorials, and deep-dives from the community.</p>
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" type="text" placeholder="Search posts..." oninput="filterPosts()"/>
+        <button class="btn-search">Search</button>
+      </div>
+    </div>
+    <div class="categories" id="categoryBar"></div>
+    <div class="posts-container">
+      <div class="posts-header">
+        <h2 id="feedHeading">Latest Posts</h2>
+        <span class="posts-count" id="postsCount"></span>
+      </div>
+      <div class="posts-grid" id="postsGrid"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- POST VIEW -->
+  <div class="view" id="view-post">
+    <div class="post-view-header" id="postViewHeader"></div>
+    <div class="post-content-wrap">
+      <div class="post-content" id="postViewContent"></div>
+    </div>
+    <div class="comments-section">
+      <h3 id="commentsHeading">Comments (3)</h3>
+      <div id="commentsContainer"></div>
+      <div class="new-comment">
+        <h4>Leave a Comment</h4>
+        <div class="comment-input-row">
+          <input class="comment-input" id="commenterName" placeholder="Your name" />
+          <input class="comment-input" id="commenterEmail" placeholder="Email (optional)" />
+        </div>
+        <textarea class="comment-textarea" id="commentText" rows="3" placeholder="Share your thoughts..."></textarea>
+        <button class="btn-comment" onclick="submitComment()">Post Comment →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cats = ['All','JavaScript','Python','React','Node.js','MongoDB','CSS','Career','AI/ML'];
+    let activeCategory = 'All';
+    let currentPage = 1;
+    const PER_PAGE = 6;
+    let currentPost = null;
+
+    const posts = [
+      { id:1, emoji:'⚛️', color:'#61dafb', bg:'#e8f7fd', category:'React', date:'Dec 15, 2024', read:'8 min', title:'Building a Real-Time Chat App with React and Socket.IO', excerpt:'Learn how to build a production-ready chat application using React hooks, Socket.IO for real-time communication, and MongoDB for message persistence.', author:'Joseph O.', authorColor:'#e8a830', likes:142, comments:18, content: `
+        <p>Real-time applications are everywhere — from WhatsApp to Slack, they've become the backbone of modern communication. In this tutorial, we'll build a full-featured chat app from scratch.</p>
+        <h2>Setting Up the Stack</h2>
+        <p>We'll use React on the frontend, Node.js/Express with Socket.IO on the backend, and MongoDB to persist messages.</p>
+        <pre>npm install express socket.io mongoose cors dotenv
+npm install -D nodemon</pre>
+        <h2>The Socket Server</h2>
+        <pre>const io = require('socket.io')(server, { cors: { origin: '*' } });
+io.on('connection', (socket) => {
+  socket.on('message', async (data) => {
+    await Message.create(data);
+    io.emit('message', data);
+  });
+});</pre>
+        <h2>React Hook for Socket</h2>
+        <pre>const useSocket = (url) => {
+  const [messages, setMessages] = useState([]);
+  useEffect(() => {
+    const socket = io(url);
+    socket.on('message', (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
+    return () => socket.disconnect();
+  }, [url]);
+  return messages;
+};</pre>
+        <blockquote>"The best real-time apps feel invisible — the technology disappears, and only the human connection remains."</blockquote>
+        <p>With this architecture, you can scale to thousands of concurrent users using Redis for Socket.IO adapters and horizontal scaling on your Node.js instances.</p>
+        <h3>Optimizing for Performance</h3>
+        <p>Message pagination, lazy loading, and virtualized lists are crucial for chat apps with large message histories. Consider implementing cursor-based pagination on your MongoDB queries.</p>` },
+      { id:2, emoji:'🐍', color:'#3776ab', bg:'#e8f0f8', category:'Python', date:'Dec 12, 2024', read:'6 min', title:'Python Data Analysis: From Raw CSV to Beautiful Visualizations', excerpt:'A practical guide to pandas, matplotlib, and seaborn — transform messy datasets into clear, compelling charts and insights that tell a story.', author:'Joseph O.', authorColor:'#00d4ff', likes:98, comments:11, content:`
+        <p>Data tells stories. But raw data tells nothing — it needs a storyteller. Python gives you the tools to be that storyteller.</p>
+        <h2>Loading and Cleaning Data</h2>
+        <pre>import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('data.csv')
+df.dropna(inplace=True)
+df['date'] = pd.to_datetime(df['date'])</pre>
+        <h2>Exploratory Analysis</h2>
+        <pre>print(df.describe())
+print(df.isnull().sum())
+print(df['category'].value_counts())</pre>
+        <blockquote>"In God we trust, all others must bring data." — W. Edwards Deming</blockquote>
+        <p>Understanding your data distribution before building models or charts saves enormous time. Always start with .describe() and .isnull().</p>
+        <h2>Beautiful Charts</h2>
+        <pre>plt.figure(figsize=(12, 6))
+sns.lineplot(data=df, x='date', y='value', hue='category')
+plt.title('Trend Analysis', fontsize=16, fontweight='bold')
+plt.tight_layout()
+plt.savefig('output.png', dpi=300)</pre>` },
+      { id:3, emoji:'🛠️', color:'#68a063', bg:'#e8f5e9', category:'Node.js', date:'Dec 10, 2024', read:'10 min', title:'REST API Best Practices: Authentication, Rate Limiting & Error Handling', excerpt:'Beyond just making it work — learn the production patterns that make your Express APIs robust, secure, and maintainable at scale.', author:'Joseph O.', authorColor:'#39ff85', likes:215, comments:29, content:`
+        <p>Anyone can write a REST API. Writing one that's production-ready is a different discipline entirely. Let's explore the patterns that matter.</p>
+        <h2>JWT Authentication Middleware</h2>
+        <pre>const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};</pre>
+        <h2>Rate Limiting</h2>
+        <pre>const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, slow down.' }
+});
+app.use('/api/', limiter);</pre>
+        <h2>Centralized Error Handler</h2>
+        <pre>app.use((err, req, res, next) => {
+  const status = err.status || 500;
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'dev' && { stack: err.stack })
+  });
+});</pre>` },
+      { id:4, emoji:'🗄️', color:'#47a248', bg:'#e8f5e8', category:'MongoDB', date:'Dec 8, 2024', read:'7 min', title:'MongoDB Aggregation Pipelines: The Power You\'re Not Using', excerpt:'Most developers use find(). The real power is in aggregate(). Learn lookup joins, $group, $project, and performance-optimized pipeline patterns.', author:'Joseph O.', authorColor:'#e8a830', likes:167, comments:22, content:`
+        <p>If you've only used MongoDB's find() method, you've been using a supercar in first gear. Aggregation pipelines unlock the full engine.</p>
+        <h2>Basic Pipeline Structure</h2>
+        <pre>db.orders.aggregate([
+  { $match: { status: 'completed', date: { $gte: new Date('2024-01-01') } } },
+  { $group: { _id: '$userId', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+  { $sort: { total: -1 } },
+  { $limit: 10 }
+]);</pre>
+        <h2>Lookup (JOIN) Operations</h2>
+        <pre>{ $lookup: {
+    from: 'users',
+    localField: 'userId',
+    foreignField: '_id',
+    as: 'user'
+  }
+},
+{ $unwind: '$user' }</pre>
+        <blockquote>Index your $match fields. Always. An unindexed aggregation on a large collection will bring your server to its knees.</blockquote>` },
+      { id:5, emoji:'🎨', color:'#e8a830', bg:'#fff8e8', category:'CSS', date:'Dec 5, 2024', read:'5 min', title:'CSS Grid Mastery: Build Any Layout Without Fighting the Browser', excerpt:'Stop fighting CSS. Learn the mental models behind Grid that make complex, responsive layouts feel effortless and predictable.', author:'Joseph O.', authorColor:'#a78bfa', likes:134, comments:15, content:`
+        <p>CSS Grid isn't just a layout tool — it's a new way of thinking about space on the web. Once it clicks, you'll never go back.</p>
+        <h2>The Key Mental Model</h2>
+        <p>Grid is about defining the <em>space first</em>, then placing content into it. This is fundamentally different from Flexbox, which is content-first.</p>
+        <pre>.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}</pre>
+        <h2>Named Template Areas</h2>
+        <pre>.layout {
+  grid-template-areas:
+    "header header header"
+    "sidebar main main"
+    "footer footer footer";
+}
+.header { grid-area: header; }
+.sidebar { grid-area: sidebar; }
+.main { grid-area: main; }</pre>` },
+      { id:6, emoji:'🤖', color:'#7c3aed', bg:'#f3f0ff', category:'AI/ML', date:'Dec 2, 2024', read:'9 min', title:'Integrating AI into Your Web Apps: A Practical Guide', excerpt:'From zero to AI-powered: learn how to add language models, embeddings, and intelligent features to existing Node.js and React applications.', author:'Joseph O.', authorColor:'#ff6b35', likes:289, comments:41, content:`
+        <p>AI integration doesn't require a PhD. With modern APIs, you can add intelligence to your apps in an afternoon.</p>
+        <h2>Setting Up API Calls</h2>
+        <pre>const callAI = async (prompt, systemPrompt) => {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await response.json();
+  return data.content[0].text;
+};</pre>
+        <h2>Streaming Responses</h2>
+        <p>For better UX, stream the AI response token by token instead of waiting for the full response. Users see output immediately.</p>
+        <pre>// Server-Sent Events pattern
+res.setHeader('Content-Type', 'text/event-stream');
+res.setHeader('Cache-Control', 'no-cache');
+// stream tokens as they arrive...</pre>` },
+      { id:7, emoji:'💼', color:'#0077cc', bg:'#e8f0f8', category:'Career', date:'Nov 28, 2024', read:'6 min', title:'From Self-Taught to Employed: What Actually Works in 2024', excerpt:'An honest look at the job search landscape for developers — what recruiters actually look for, how to stand out, and common mistakes to avoid.', author:'Joseph O.', authorColor:'#e8a830', likes:321, comments:56, content:`<p>Landing your first dev job is harder than learning to code. Here's what no bootcamp tells you.</p><h2>Build Things That Work</h2><p>Recruiters don't care about your tutorial projects. They care about problems you solved. Build one thing that actually works for real users — even 10 users. That beats 20 to-do list clones.</p><h2>GitHub Activity Matters</h2><p>Daily commits signal consistency. Not quantity — consistency. A few meaningful commits per week over 6 months reads better than a burst and silence.</p><blockquote>Your portfolio is a proof of work, not a resumé of aspirations. Ship things.</blockquote>` },
+      { id:8, emoji:'⚡', color:'#f59e0b', bg:'#fffbeb', category:'JavaScript', date:'Nov 25, 2024', read:'7 min', title:'JavaScript Performance: 10 Patterns That Actually Matter', excerpt:'Stop micro-optimizing strings. Learn the performance patterns that have measurable impact — memory management, rendering, and async efficiency.', author:'Joseph O.', authorColor:'#39ff85', likes:178, comments:24, content:`<p>90% of JS performance advice online is cargo-cult. Here are patterns with actual measurable impact.</p><h2>Avoid Layout Thrashing</h2><pre>// Bad - forces multiple reflows
+elements.forEach(el => {
+  el.style.height = el.offsetHeight + 'px'; // READ then WRITE
+});
+// Good - batch reads then writes
+const heights = elements.map(el => el.offsetHeight); // batch reads
+heights.forEach((h, i) => elements[i].style.height = h + 'px'); // batch writes</pre><h2>Debounce vs Throttle</h2><pre>const debounce = (fn, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};</pre>` }
+    ];
+
+    const comments = [
+      { name:'Amara K.', color:'#e8a830', time:'2 hours ago', text:'This is exactly what I needed. The Socket.IO hook pattern is clean — I\'ve been doing it wrong this whole time.' },
+      { name:'Dev Ng.', color:'#00d4ff', time:'5 hours ago', text:'Great write-up. Worth mentioning Redis adapter for Socket.IO when scaling horizontally across multiple Node instances.' },
+      { name:'Sarah M.', color:'#39ff85', time:'1 day ago', text:'Bookmarked. The part about message pagination is underrated — most tutorials skip it and then wonder why chat apps slow down.' }
+    ];
+
+    function renderCategories() {
+      document.getElementById('categoryBar').innerHTML = cats.map(c =>
+        `<button class="cat-btn ${c===activeCategory?'active':''}" onclick="filterByCategory('${c}')">${c}</button>`
+      ).join('');
+    }
+
+    function filterByCategory(cat) {
+      activeCategory = cat;
+      currentPage = 1;
+      renderCategories();
+      renderPosts();
+    }
+
+    function filterPosts() {
+      currentPage = 1;
+      renderPosts();
+    }
+
+    function getFilteredPosts() {
+      const q = document.getElementById('searchInput')?.value.toLowerCase()||'';
+      return posts.filter(p =>
+        (activeCategory==='All'||p.category===activeCategory) &&
+        (!q || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q))
+      );
+    }
+
+    function renderPosts() {
+      const filtered = getFilteredPosts();
+      const total = filtered.length;
+      const paged = filtered.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
+      document.getElementById('postsCount').textContent = `${total} post${total!==1?'s':''}`;
+      document.getElementById('feedHeading').textContent = activeCategory==='All'?'Latest Posts':activeCategory+' Posts';
+      document.getElementById('postsGrid').innerHTML = paged.map(p => `
+        <div class="post-card" onclick="openPost(${p.id})">
+          <div class="post-img" style="background:${p.bg};color:${p.color}">${p.emoji}</div>
+          <div class="post-body">
+            <div class="post-meta">
+              <span class="post-category" style="background:${p.color}22;color:${p.color}">${p.category}</span>
+              <span class="post-date">${p.date}</span>
+              <span class="post-read-time">· ${p.read} read</span>
+            </div>
+            <h3>${p.title}</h3>
+            <p class="post-excerpt">${p.excerpt}</p>
+            <div class="post-footer">
+              <div class="post-author">
+                <div class="author-avatar" style="background:${p.authorColor}">${p.author[0]}</div>
+                <span class="author-name">${p.author}</span>
+              </div>
+              <div class="post-stats">
+                <span>❤️ ${p.likes}</span>
+                <span>💬 ${p.comments}</span>
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+      renderPagination(Math.ceil(total/PER_PAGE));
+    }
+
+    function renderPagination(totalPages) {
+      const pg = document.getElementById('pagination');
+      if (totalPages<=1){pg.innerHTML='';return;}
+      let html = '';
+      if(currentPage>1) html+=`<button class="page-btn" onclick="goPage(${currentPage-1})">←</button>`;
+      for(let i=1;i<=totalPages;i++) html+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      if(currentPage<totalPages) html+=`<button class="page-btn" onclick="goPage(${currentPage+1})">→</button>`;
+      pg.innerHTML = html;
+    }
+
+    function goPage(p){currentPage=p;renderPosts();window.scrollTo({top:0,behavior:'smooth'});}
+
+    function openPost(id) {
+      const post = posts.find(p=>p.id===id);
+      if(!post) return;
+      currentPost = post;
+      document.getElementById('postViewHeader').innerHTML = `
+        <div class="breadcrumb" style="max-width:900px;margin:0 auto;cursor:pointer" onclick="showView('home')">← Back to posts</div>
+        <div style="max-width:900px;margin:0 auto;">
+          <div class="post-meta" style="display:flex;gap:.8rem;align-items:center;margin-bottom:.8rem;">
+            <span class="post-category" style="padding:.2rem .6rem;border-radius:4px;font-family:var(--mono);font-size:.65rem;background:${post.color}33;color:${post.color}">${post.category}</span>
+            <span style="font-family:var(--mono);font-size:.7rem;color:#7a8499">${post.date}</span>
+            <span style="font-family:var(--mono);font-size:.7rem;color:#7a8499">· ${post.read} read</span>
+          </div>
+          <h1>${post.title}</h1>
+          <div style="display:flex;align-items:center;gap:.7rem;margin-top:1rem;">
+            <div class="author-avatar" style="width:34px;height:34px;background:${post.authorColor};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff;flex-shrink:0">${post.author[0]}</div>
+            <div>
+              <div style="font-size:.88rem;color:#e8eaf0">${post.author}</div>
+              <div style="font-family:var(--mono);font-size:.68rem;color:#7a8499">Full-Stack Developer · Nairobi, Kenya</div>
+            </div>
+            <div style="display:flex;gap:.8rem;margin-left:auto;font-family:var(--mono);font-size:.72rem;color:#7a8499">
+              <span>❤️ ${post.likes}</span><span>💬 ${post.comments}</span>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('postViewContent').innerHTML = post.content;
+      document.getElementById('commentsHeading').textContent = `Comments (${comments.length})`;
+      renderComments();
+      showView('post');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function renderComments() {
+      document.getElementById('commentsContainer').innerHTML = comments.map(c=>`
+        <div class="comment-box">
+          <div class="comment-header">
+            <div class="comment-avatar" style="background:${c.color}">${c.name[0]}</div>
+            <div class="comment-meta">
+              <div class="comment-name">${c.name}</div>
+              <div class="comment-time">${c.time}</div>
+            </div>
+          </div>
+          <div class="comment-text">${c.text}</div>
+          <div class="comment-actions">
+            <button class="comment-btn" onclick="this.textContent=this.textContent.includes('👍')?'👍 1':'👍 0'">👍 0</button>
+            <button class="comment-btn">Reply</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function submitComment() {
+      const name = document.getElementById('commenterName').value.trim();
+      const text = document.getElementById('commentText').value.trim();
+      if(!name||!text){alert('Please enter your name and comment.');return;}
+      const colors=['#e8a830','#00d4ff','#39ff85','#a78bfa'];
+      comments.unshift({name,color:colors[Math.floor(Math.random()*colors.length)],time:'Just now',text});
+      document.getElementById('commenterName').value='';
+      document.getElementById('commentText').value='';
+      document.getElementById('commentsHeading').textContent=`Comments (${comments.length})`;
+      renderComments();
+    }
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+name).classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function toggleAuth() {
+      const name = prompt('Enter your username to sign in (demo):');
+      if(name) alert(`Welcome back, ${name}! 👋`);
+    }
+
+    function showWritePost() {
+      const title = prompt('Post title (demo):');
+      if(title) alert(`Post "${title}" saved as draft! In full version, this opens a rich text editor.`);
+    }
+
+    // Init
+    renderCategories();
+    renderPosts();
+  </script>
+</body>
+</html>

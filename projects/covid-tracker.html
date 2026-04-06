@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COVID-19 Global Data Tracker — Python Data Science Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0205;--bg2:#0e0308;--card:#140408;--orange:#ff6b35;--cyan:#00e5ff;--red:#ff3838;--yellow:#ffd700;--green:#39ff14;--text:#e8edf5;--muted:#7a8ba8;--border:rgba(255,107,53,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.mesh{position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(255,107,53,0.07),transparent),radial-gradient(ellipse 60% 80% at 80% 80%,rgba(255,56,56,0.05),transparent);pointer-events:none}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);background:rgba(10,2,5,0.9);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}.logo span{color:var(--orange)}
+.back-btn{font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 14px;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.2s}
+.back-btn:hover{border-color:var(--orange);color:var(--orange)}
+.hero{text-align:center;padding:40px 20px 24px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:12px}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.8rem);font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
+h1 span{color:var(--orange)}
+.main{max-width:1200px;margin:0 auto;padding:0 20px 60px}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:28px;padding:20px;background:var(--card);border:1px solid var(--border)}
+.control-label{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+select, .range-btn{font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:8px 14px;background:rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text);cursor:pointer;outline:none;transition:.2s}
+select:focus, select:hover{border-color:var(--orange)}
+.range-btn{background:transparent;color:var(--muted)}
+.range-btn.active,.range-btn:hover{border-color:var(--orange);color:var(--orange);background:rgba(255,107,53,.06)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);padding:22px;transition:.3s;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.stat-card.total::before{background:var(--orange)}
+.stat-card.deaths::before{background:var(--red)}
+.stat-card.recovered::before{background:var(--green)}
+.stat-card.active::before{background:var(--yellow)}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;line-height:1}
+.stat-change{font-family:'JetBrains Mono',monospace;font-size:.7rem;margin-top:6px}
+.charts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;margin-bottom:20px}
+.chart-card{background:var(--card);border:1px solid var(--border);padding:22px}
+.chart-title{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.chart-sub{font-size:.78rem;color:var(--muted);margin-bottom:16px}
+.chart-container{position:relative}
+.country-table{background:var(--card);border:1px solid var(--border);overflow:hidden}
+.table-header{display:grid;grid-template-columns:2fr 1.5fr 1.5fr 1fr;gap:0;padding:12px 20px;border-bottom:1px solid var(--border)}
+.table-header span{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.table-row{display:grid;grid-template-columns:2fr 1.5fr 1.5fr 1fr;gap:0;padding:12px 20px;border-bottom:1px solid var(--border);transition:.2s;cursor:pointer}
+.table-row:hover{background:rgba(255,107,53,.04)}
+.country-name{font-size:.88rem;font-weight:500}
+.table-row span{font-family:'JetBrains Mono',monospace;font-size:.78rem;align-self:center}
+.risk-badge{font-size:.65rem;padding:2px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace}
+.risk-high{background:rgba(255,56,56,.12);color:var(--red);border:1px solid rgba(255,56,56,.25)}
+.risk-med{background:rgba(255,215,0,.1);color:var(--yellow);border:1px solid rgba(255,215,0,.2)}
+.risk-low{background:rgba(57,255,20,.08);color:var(--green);border:1px solid rgba(57,255,20,.2)}
+.python-badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:5px 12px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.25);color:var(--orange);margin:0 4px}
+@media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr}.charts-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr}.controls{gap:8px}}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<nav>
+  <div class="logo">covid<span>tracker</span></div>
+  <a href="../index.html" class="back-btn">← Portfolio</a>
+</nav>
+
+<div class="hero">
+  <p class="tag">// Python · Pandas · Matplotlib · Data Science</p>
+  <h1>COVID-19 Global <span>Data Tracker</span></h1>
+  <p style="color:var(--muted);font-size:.9rem;margin-top:8px">
+    <span class="python-badge">🐍 Python</span>
+    <span class="python-badge">📊 Pandas</span>
+    <span class="python-badge">📈 Matplotlib</span>
+    <span class="python-badge">🔢 NumPy</span>
+  </p>
+</div>
+
+<div class="main">
+  <div class="controls">
+    <div>
+      <div class="control-label">Region</div>
+      <select id="regionSelect" onchange="updateData()">
+        <option>Global</option><option>Africa</option><option>Europe</option>
+        <option>Asia</option><option>Americas</option>
+      </select>
+    </div>
+    <div>
+      <div class="control-label">Metric</div>
+      <select id="metricSelect" onchange="updateCharts()">
+        <option value="cases">Total Cases</option>
+        <option value="deaths">Deaths</option>
+        <option value="recovered">Recovered</option>
+      </select>
+    </div>
+    <div>
+      <div class="control-label">Time Range</div>
+      <div style="display:flex;gap:4px">
+        <button class="range-btn" onclick="setRange(this,'1M')">1M</button>
+        <button class="range-btn" onclick="setRange(this,'3M')">3M</button>
+        <button class="range-btn active" onclick="setRange(this,'1Y')">1Y</button>
+        <button class="range-btn" onclick="setRange(this,'ALL')">All</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-label">Total Cases</div>
+      <div class="stat-num" id="totalCases" style="color:var(--orange)">676.6M</div>
+      <div class="stat-change" style="color:var(--orange)">↑ +142K this week</div>
+    </div>
+    <div class="stat-card deaths">
+      <div class="stat-label">Total Deaths</div>
+      <div class="stat-num" id="totalDeaths" style="color:var(--red)">6.89M</div>
+      <div class="stat-change" style="color:var(--red)">↑ +1.2K this week</div>
+    </div>
+    <div class="stat-card recovered">
+      <div class="stat-label">Recovered</div>
+      <div class="stat-num" id="totalRecovered" style="color:var(--green)">651.1M</div>
+      <div class="stat-change" style="color:var(--green)">+97.2% recovery rate</div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-label">Active Cases</div>
+      <div class="stat-num" id="activeCases" style="color:var(--yellow)">18.6M</div>
+      <div class="stat-change" style="color:var(--muted)">Currently tracked</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Global Case Trend</div>
+      <div class="chart-sub">Monthly new cases — animated Python/pandas-style visualization</div>
+      <div class="chart-container"><canvas id="lineChart" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Regional Distribution</div>
+      <div class="chart-sub">Cases by geographic region</div>
+      <div class="chart-container"><canvas id="doughnutChart" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Monthly Deaths vs Recoveries Comparison</div>
+    <div class="chart-sub">Bar chart — comparative analysis across 12-month period</div>
+    <canvas id="barChart" height="90"></canvas>
+  </div>
+
+  <div class="country-table">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--orange);text-transform:uppercase;letter-spacing:.1em">Top Countries by Cases</div>
+      <input id="tableSearch" placeholder="Filter countries..." oninput="filterTable()" style="background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:.72rem;outline:none;width:160px">
+    </div>
+    <div class="table-header">
+      <span>Country</span><span>Cases</span><span>Deaths</span><span>Risk</span>
+    </div>
+    <div id="countryTable"></div>
+  </div>
+</div>
+
+<script>
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const genData = (base, variance, n=12) => Array.from({length:n},()=>Math.floor(base+(Math.random()-0.5)*variance));
+
+const countries = [
+  {name:'🇺🇸 United States',cases:'103.4M',deaths:'1.13M',risk:'high'},
+  {name:'🇮🇳 India',cases:'44.7M',deaths:'530K',risk:'med'},
+  {name:'🇫🇷 France',cases:'38.6M',deaths:'167K',risk:'med'},
+  {name:'🇩🇪 Germany',cases:'38.4M',deaths:'174K',risk:'med'},
+  {name:'🇧🇷 Brazil',cases:'37.1M',deaths:'702K',risk:'high'},
+  {name:'🇰🇷 South Korea',cases:'32.8M',deaths:'35K',risk:'low'},
+  {name:'🇬🇧 United Kingdom',cases:'24.6M',deaths:'230K',risk:'med'},
+  {name:'🇯🇵 Japan',cases:'33.8M',deaths:'74K',risk:'low'},
+  {name:'🇮🇹 Italy',cases:'26.4M',deaths:'195K',risk:'med'},
+  {name:'🇰🇪 Kenya',cases:'342K',deaths:'5.6K',risk:'low'}
+];
+
+let lineChart, doughnutChart, barChart;
+
+function initCharts() {
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  lineChart = new Chart(lineCtx, {
+    type:'line',
+    data:{
+      labels:months,
+      datasets:[{
+        label:'New Cases (millions)',
+        data:genData(15,10),
+        borderColor:'#ff6b35',
+        backgroundColor:'rgba(255,107,53,0.08)',
+        fill:true,
+        tension:0.4,
+        pointBackgroundColor:'#ff6b35',
+        pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:11}}}},
+      scales:{
+        x:{ticks:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,107,53,0.06)'}},
+        y:{ticks:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,107,53,0.06)'}}
+      }
+    }
+  });
+
+  const doCtx = document.getElementById('doughnutChart').getContext('2d');
+  doughnutChart = new Chart(doCtx, {
+    type:'doughnut',
+    data:{
+      labels:['Americas','Europe','Asia','Africa','Oceania'],
+      datasets:[{
+        data:[42,28,22,5,3],
+        backgroundColor:['rgba(255,107,53,0.7)','rgba(0,229,255,0.6)','rgba(180,79,255,0.6)','rgba(57,255,20,0.6)','rgba(255,215,0,0.6)'],
+        borderColor:['#ff6b35','#00e5ff','#b44fff','#39ff14','#ffd700'],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      cutout:'65%',
+      plugins:{legend:{position:'bottom',labels:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:10},padding:12}}}
+    }
+  });
+
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(barCtx, {
+    type:'bar',
+    data:{
+      labels:months,
+      datasets:[
+        {label:'Deaths (K)',data:genData(85,40),backgroundColor:'rgba(255,56,56,0.5)',borderColor:'#ff3838',borderWidth:1},
+        {label:'Recovered (M)',data:genData(12,6),backgroundColor:'rgba(57,255,20,0.4)',borderColor:'#39ff14',borderWidth:1}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:11}}}},
+      scales:{
+        x:{ticks:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,107,53,0.06)'}},
+        y:{ticks:{color:'#7a8ba8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,107,53,0.06)'}}
+      }
+    }
+  });
+}
+
+function renderTable(data) {
+  const tb = document.getElementById('countryTable');
+  tb.innerHTML = data.map(c=>`
+    <div class="table-row">
+      <span class="country-name">${c.name}</span>
+      <span style="color:var(--orange)">${c.cases}</span>
+      <span style="color:var(--red)">${c.deaths}</span>
+      <span><span class="risk-badge risk-${c.risk}">${c.risk.toUpperCase()}</span></span>
+    </div>`).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  renderTable(countries.filter(c => c.name.toLowerCase().includes(q)));
+}
+
+function updateCharts() {
+  const metric = document.getElementById('metricSelect').value;
+  const colors = {cases:'#ff6b35',deaths:'#ff3838',recovered:'#39ff14'};
+  lineChart.data.datasets[0].data = genData(15,10);
+  lineChart.data.datasets[0].borderColor = colors[metric];
+  lineChart.data.datasets[0].backgroundColor = colors[metric]+'15';
+  lineChart.data.datasets[0].pointBackgroundColor = colors[metric];
+  lineChart.update();
+}
+
+function updateData() { updateCharts(); }
+function setRange(btn, range) {
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  lineChart.data.datasets[0].data = genData(range==='1M'?5:range==='3M'?10:15, range==='1M'?3:range==='3M'?7:10);
+  lineChart.update();
+}
+
+initCharts(); renderTable(countries);
+</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anonymous Feedback Platform — Full-Stack Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020d0f;--bg2:#041214;--card:#061618;--cyan:#00e5ff;--green:#39ff14;--purple:#b44fff;--text:#e8edf5;--muted:#7a8ba8;--border:rgba(0,229,255,0.1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.mesh{position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 10%,rgba(0,229,255,0.06),transparent),radial-gradient(ellipse 60% 80% at 90% 90%,rgba(57,255,20,0.04),transparent);pointer-events:none}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);background:rgba(2,13,15,0.9);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}.logo span{color:var(--cyan)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.tab-btn{font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 16px;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;transition:.2s;text-transform:uppercase;letter-spacing:.06em}
+.tab-btn:hover,.tab-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
+.back-btn{font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 14px;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.2s}
+.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+/* Submit View */
+.submit-view,.admin-view{display:none;max-width:760px;margin:0 auto;padding:50px 20px}
+.submit-view.active,.admin-view.active{display:block}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.5rem);font-weight:800;letter-spacing:-.03em;margin-bottom:8px;text-align:center}
+.page-title span{color:var(--cyan)}
+.page-sub{color:var(--muted);text-align:center;margin-bottom:40px;font-size:.92rem}
+.form-card{background:var(--card);border:1px solid var(--border);padding:32px}
+.form-group{margin-bottom:20px}
+.form-group label{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.form-group label .icon{color:var(--cyan)}
+input,textarea,select{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text);padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:.3s;resize:none}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan);background:rgba(0,229,255,.02)}
+textarea{height:130px}
+.mood-grid{display:flex;gap:10px;flex-wrap:wrap}
+.mood-btn{font-size:1.4rem;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid var(--border);cursor:pointer;transition:.2s}
+.mood-btn.selected{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:0 0 16px rgba(0,229,255,.2)}
+.rating-row{display:flex;gap:6px}
+.star-btn{background:none;border:none;font-size:1.5rem;cursor:pointer;transition:.2s;line-height:1;color:var(--muted);filter:grayscale(1)}
+.star-btn.lit{color:#ffd700;filter:none}
+.anon-row{display:flex;align-items:center;gap:12px;padding:14px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12)}
+.toggle{width:42px;height:24px;background:rgba(0,229,255,.2);border-radius:12px;position:relative;cursor:pointer;transition:.3s;border:1px solid rgba(0,229,255,.3)}
+.toggle.on{background:rgba(0,229,255,.5)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.3s}
+.toggle.on::after{transform:translateX(18px)}
+.submit-btn{width:100%;padding:14px;background:var(--cyan);color:#020d0f;border:none;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:.3s;margin-top:4px}
+.submit-btn:hover{box-shadow:0 0 30px rgba(0,229,255,.4);background:#20eeff}
+.success-msg{display:none;text-align:center;padding:24px;background:rgba(57,255,20,.05);border:1px solid rgba(57,255,20,.2);color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.85rem;line-height:1.7}
+/* Admin View */
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.admin-stat{background:var(--card);border:1px solid var(--border);padding:20px}
+.admin-stat .num{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--cyan)}
+.admin-stat .lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.feedback-list{display:flex;flex-direction:column;gap:12px}
+.fb-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--cyan);padding:18px;transition:.2s}
+.fb-card:hover{background:rgba(0,229,255,.03)}
+.fb-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.fb-anon{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--cyan)}
+.fb-cat{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:2px 8px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--cyan)}
+.fb-mood{font-size:1rem}
+.fb-stars{font-size:.8rem;color:#ffd700}
+.fb-time{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)}
+.fb-text{color:var(--text);font-size:.87rem;line-height:1.65}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:4px 12px;background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.25);color:var(--green)}
+.badge::before{content:'';width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+@media(max-width:600px){.admin-stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<nav>
+  <div class="logo">anon<span>feedback</span></div>
+  <div class="nav-right">
+    <button class="tab-btn active" onclick="showView('submit',this)">Submit</button>
+    <button class="tab-btn" onclick="showView('admin',this)">Admin Panel</button>
+    <a href="../index.html" class="back-btn">← Portfolio</a>
+  </div>
+</nav>
+
+<!-- Submit View -->
+<div class="submit-view active" id="submitView">
+  <h1 class="page-title"><span>Anonymous</span> Feedback</h1>
+  <p class="page-sub">Your identity is always protected. Share openly and honestly.</p>
+  <div style="text-align:center;margin-bottom:32px"><span class="badge">End-to-End Privacy Protected</span></div>
+
+  <div class="form-card">
+    <form id="feedbackForm">
+      <div class="form-group">
+        <label><span class="icon">📁</span> Category</label>
+        <select id="fbCategory">
+          <option>Product Feedback</option><option>Bug Report</option>
+          <option>Feature Request</option><option>Team / Culture</option>
+          <option>General</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><span class="icon">😊</span> How are you feeling?</label>
+        <div class="mood-grid">
+          <button type="button" class="mood-btn selected" onclick="selectMood(this,'😊')">😊</button>
+          <button type="button" class="mood-btn" onclick="selectMood(this,'😐')">😐</button>
+          <button type="button" class="mood-btn" onclick="selectMood(this,'😟')">😟</button>
+          <button type="button" class="mood-btn" onclick="selectMood(this,'😡')">😡</button>
+          <button type="button" class="mood-btn" onclick="selectMood(this,'🤩')">🤩</button>
+          <button type="button" class="mood-btn" onclick="selectMood(this,'🤔')">🤔</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><span class="icon">⭐</span> Rating</label>
+        <div class="rating-row" id="stars">
+          <button type="button" class="star-btn lit" onclick="setRating(1)">★</button>
+          <button type="button" class="star-btn lit" onclick="setRating(2)">★</button>
+          <button type="button" class="star-btn lit" onclick="setRating(3)">★</button>
+          <button type="button" class="star-btn" onclick="setRating(4)">★</button>
+          <button type="button" class="star-btn" onclick="setRating(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><span class="icon">💬</span> Your Feedback</label>
+        <textarea id="fbText" placeholder="Share your thoughts honestly. We read every submission..." required></textarea>
+      </div>
+      <div class="form-group">
+        <div class="anon-row">
+          <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"></div>
+          <div>
+            <div style="font-size:.9rem;font-weight:500">Submit Anonymously</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:2px">Your identity is never logged or stored</div>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn">Submit Anonymously →</button>
+    </form>
+    <div class="success-msg" id="successMsg">
+      ✓ Feedback Received<br><br>
+      Your submission has been encrypted and stored anonymously.<br>
+      <span style="font-size:.75rem;color:var(--muted)">No identifying information was collected.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Admin View -->
+<div class="admin-view" id="adminView">
+  <h1 class="page-title">Admin <span>Dashboard</span></h1>
+  <p class="page-sub">Real-time anonymous feedback overview. All submissions are privacy-protected.</p>
+
+  <div class="admin-stats">
+    <div class="admin-stat"><div class="num" id="totalCount">0</div><div class="lbl">Total Submissions</div></div>
+    <div class="admin-stat"><div class="num" id="avgRating" style="color:var(--green)">0.0</div><div class="lbl">Avg Rating</div></div>
+    <div class="admin-stat"><div class="num" id="todayCount" style="color:var(--purple)">0</div><div class="lbl">Today's Submissions</div></div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px">Recent Submissions</div>
+  <div class="feedback-list" id="feedbackList"></div>
+</div>
+
+<script>
+let currentMood = '😊', currentRating = 3;
+const submissions = [
+  {cat:'Product Feedback',mood:'🤩',rating:5,text:'The new dashboard redesign is incredible. Navigation is so much more intuitive now. The performance improvements are noticeable too.',time:'2 min ago'},
+  {cat:'Bug Report',mood:'😟',rating:2,text:'Found a critical issue — the export function silently fails when the dataset exceeds 10,000 rows. No error message shown to the user.',time:'15 min ago'},
+  {cat:'Feature Request',mood:'😊',rating:4,text:'Would love dark mode support and keyboard shortcuts for power users. These two features would significantly improve my daily workflow.',time:'1 hr ago'},
+  {cat:'Team / Culture',mood:'😊',rating:5,text:'The engineering culture here is genuinely great. People actually listen, technical debt is taken seriously, and the team is highly collaborative.',time:'3 hrs ago'},
+  {cat:'General',mood:'😐',rating:3,text:'Documentation could be improved significantly. Some API endpoints are undocumented and new developers struggle to onboard without hand-holding.',time:'1 day ago'}
+];
+
+function selectMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected'); currentMood = mood;
+}
+function setRating(n) {
+  currentRating = n;
+  document.querySelectorAll('.star-btn').forEach((s,i) => s.classList.toggle('lit', i < n));
+}
+
+document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = document.getElementById('fbText').value.trim();
+  if (!text) return;
+  const newEntry = {
+    cat: document.getElementById('fbCategory').value,
+    mood: currentMood, rating: currentRating, text, time: 'Just now'
+  };
+  submissions.unshift(newEntry);
+  document.getElementById('feedbackForm').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+  renderAdmin();
+  setTimeout(() => {
+    document.getElementById('feedbackForm').reset();
+    document.getElementById('feedbackForm').style.display = 'block';
+    document.getElementById('successMsg').style.display = 'none';
+    currentMood = '😊'; currentRating = 3;
+    document.querySelectorAll('.mood-btn')[0].classList.add('selected');
+    document.querySelectorAll('.star-btn').forEach((s,i) => s.classList.toggle('lit', i < 3));
+  }, 2500);
+});
+
+function renderAdmin() {
+  document.getElementById('totalCount').textContent = submissions.length + 127;
+  const avg = (submissions.reduce((a,b)=>a+b.rating,0)/submissions.length).toFixed(1);
+  document.getElementById('avgRating').textContent = avg;
+  document.getElementById('todayCount').textContent = submissions.filter(s=>s.time.includes('min')||s.time==='Just now').length + 8;
+  const list = document.getElementById('feedbackList');
+  list.innerHTML = submissions.map(s=>`
+    <div class="fb-card">
+      <div class="fb-meta">
+        <span class="fb-anon">~anon_${Math.random().toString(36).substr(2,5)}</span>
+        <span class="fb-cat">${s.cat}</span>
+        <span class="fb-mood">${s.mood}</span>
+        <span class="fb-stars">${'★'.repeat(s.rating)}${'☆'.repeat(5-s.rating)}</span>
+        <span class="fb-time">${s.time}</span>
+      </div>
+      <div class="fb-text">${s.text}</div>
+    </div>`).join('');
+}
+
+function showView(view, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('submitView').classList.remove('active');
+  document.getElementById('adminView').classList.remove('active');
+  document.getElementById(view+'View').classList.add('active');
+  if (view==='admin') renderAdmin();
+}
+
+renderAdmin();
+</script>
+</body>
+</html>

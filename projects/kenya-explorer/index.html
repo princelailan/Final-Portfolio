@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kenya Explorer — Discover the Heart of Africa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0a0e08;--card:#111a0e;--gold:#e8a830;--green:#4caf50;--red:#e53935;--black:#1a0a00;--cream:#f5f0e8;--text:#e8eaf0;--dim:#7a8499;--border:#1e2d1e;--mono:'Space Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);overflow-x:hidden;}
+    a{text-decoration:none;color:inherit;}
+
+    /* Nav */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(10,14,8,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+    .logo{font-family:var(--mono);font-size:.9rem;letter-spacing:2px;color:var(--gold);}
+    .logo span{color:var(--green);}
+    .nav-links{display:flex;gap:1.8rem;}
+    .nav-links a{font-family:var(--mono);font-size:.75rem;color:var(--dim);transition:color .2s;}
+    .nav-links a:hover{color:var(--gold);}
+    .back-btn{font-family:var(--mono);font-size:.72rem;color:var(--dim);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;transition:all .2s;}
+    .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+    /* Hero */
+    .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 60%, rgba(76,175,80,.08) 0%, transparent 70%), linear-gradient(180deg,#0a0e08 0%,#0d1a0b 100%);}
+    .hero-bg{position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%, rgba(232,168,48,.04) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(76,175,80,.06) 0%, transparent 50%);pointer-events:none;}
+    .hero-badge{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.72rem;color:var(--green);border:1px solid rgba(76,175,80,.3);padding:.35rem .9rem;border-radius:100px;margin-bottom:1.5rem;letter-spacing:1px;}
+    .hero h1{font-family:var(--display);font-size:clamp(3rem,8vw,6rem);font-weight:800;line-height:1;margin-bottom:1rem;letter-spacing:-2px;}
+    .hero h1 .line1{color:var(--text);}
+    .hero h1 .line2{color:transparent;-webkit-text-stroke:2px var(--gold);}
+    .hero h1 .line3{color:var(--green);}
+    .hero-sub{color:var(--dim);font-size:1.1rem;max-width:540px;margin:0 auto 2.5rem;line-height:1.7;}
+    .hero-flags{display:flex;justify-content:center;gap:.5rem;margin-bottom:2.5rem;flex-wrap:wrap;}
+    .flag-chip{padding:.35rem .9rem;border-radius:100px;font-family:var(--mono);font-size:.72rem;border:1px solid rgba(255,255,255,.1);color:var(--dim);transition:all .2s;}
+    .btn-explore{padding:.9rem 2rem;background:linear-gradient(135deg,var(--gold),#c48820);color:#060910;font-family:var(--mono);font-size:.85rem;font-weight:700;border:none;border-radius:8px;cursor:pointer;letter-spacing:.5px;transition:all .3s;}
+    .btn-explore:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(232,168,48,.3);}
+    .scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.68rem;color:var(--dim);letter-spacing:2px;animation:bounce 2s infinite;}
+    @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(8px);}}
+
+    /* Sections */
+    .section{padding:7rem 0;position:relative;}
+    .container{max-width:1200px;margin:0 auto;padding:0 2rem;}
+    .section-badge{font-family:var(--mono);font-size:.7rem;color:var(--green);letter-spacing:3px;text-transform:uppercase;margin-bottom:.7rem;}
+    .section-title{font-family:var(--display);font-size:clamp(2rem,4vw,3rem);font-weight:800;margin-bottom:.5rem;}
+    .section-sub{color:var(--dim);font-size:.95rem;margin-bottom:3rem;max-width:500px;}
+
+    /* Regions */
+    .regions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+    .region-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .3s;group:hover;}
+    .region-card:hover{transform:translateY(-6px);border-color:rgba(232,168,48,.4);box-shadow:0 20px 60px rgba(0,0,0,.5);}
+    .region-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;}
+    .region-body{padding:1.2rem;}
+    .region-name{font-family:var(--display);font-size:1.1rem;font-weight:800;margin-bottom:.4rem;}
+    .region-desc{font-size:.85rem;color:var(--dim);line-height:1.6;margin-bottom:.8rem;}
+    .region-tags{display:flex;flex-wrap:wrap;gap:.4rem;}
+    .rtag{padding:.2rem .6rem;border-radius:4px;font-family:var(--mono);font-size:.65rem;background:rgba(255,255,255,.05);color:var(--dim);}
+
+    /* Heritage Items */
+    .heritage-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;}
+    .heritage-item{display:flex;gap:1.2rem;padding:1.5rem;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .25s;}
+    .heritage-item:hover{border-color:rgba(76,175,80,.3);transform:translateX(4px);}
+    .heritage-icon{font-size:2.5rem;flex-shrink:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:rgba(76,175,80,.06);border-radius:12px;}
+    .heritage-content h4{font-family:var(--display);font-size:1rem;font-weight:700;margin-bottom:.4rem;}
+    .heritage-content p{font-size:.85rem;color:var(--dim);line-height:1.6;}
+
+    /* Wildlife */
+    .wildlife-scroll{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;}
+    .animal-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;transition:all .3s;cursor:pointer;}
+    .animal-card:hover{border-color:var(--gold);transform:translateY(-4px);}
+    .animal-emoji{font-size:2.5rem;margin-bottom:.6rem;}
+    .animal-name{font-family:var(--display);font-size:.9rem;font-weight:700;margin-bottom:.3rem;}
+    .animal-sub{font-size:.75rem;color:var(--dim);}
+    .conservation{font-family:var(--mono);font-size:.65rem;padding:.15rem .5rem;border-radius:100px;margin-top:.5rem;display:inline-block;}
+    .c-en{background:rgba(76,175,80,.1);color:var(--green);border:1px solid rgba(76,175,80,.2);}
+    .c-vu{background:rgba(232,168,48,.1);color:var(--gold);border:1px solid rgba(232,168,48,.2);}
+    .c-en2{background:rgba(229,57,53,.1);color:var(--red);border:1px solid rgba(229,57,53,.2);}
+
+    /* Facts */
+    .facts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+    .fact-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem;text-align:center;}
+    .fact-num{font-family:var(--display);font-size:2rem;font-weight:800;color:var(--gold);}
+    .fact-label{font-family:var(--mono);font-size:.7rem;color:var(--dim);margin-top:.3rem;}
+
+    /* Gallery */
+    .gallery-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:200px 200px;gap:1rem;}
+    .gallery-item{border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3rem;border:1px solid var(--border);transition:all .3s;overflow:hidden;cursor:pointer;}
+    .gallery-item:hover{transform:scale(1.02);border-color:rgba(232,168,48,.3);}
+    .gallery-item:nth-child(1){grid-row:1/3;}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:center;justify-content:center;padding:2rem;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:#0d1825;border:1px solid var(--border);border-radius:16px;padding:2.5rem;max-width:560px;width:100%;position:relative;}
+    .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--dim);font-size:1.3rem;cursor:pointer;padding:.3rem;}
+    .modal-close:hover{color:var(--text);}
+    .modal h2{font-family:var(--display);font-size:1.6rem;font-weight:800;margin-bottom:1rem;}
+    .modal p{color:var(--dim);line-height:1.8;font-size:.92rem;}
+
+    /* Footer */
+    .footer{padding:3rem 0;border-top:1px solid var(--border);text-align:center;}
+    .footer-logo{font-family:var(--mono);font-size:1rem;color:var(--gold);margin-bottom:.5rem;}
+    .footer p{color:var(--dim);font-size:.85rem;}
+
+    @media(max-width:1024px){.regions-grid{grid-template-columns:1fr 1fr;}.wildlife-scroll{grid-template-columns:repeat(3,1fr);}.gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;}.gallery-item:nth-child(1){grid-row:auto;}}
+    @media(max-width:768px){.nav-links{display:none;}.regions-grid{grid-template-columns:1fr;}.heritage-grid{grid-template-columns:1fr;}.facts-grid{grid-template-columns:1fr 1fr;}.wildlife-scroll{grid-template-columns:repeat(2,1fr);}.gallery-grid{grid-template-columns:1fr 1fr;}}
+    @media(max-width:480px){.facts-grid{grid-template-columns:1fr 1fr;}.wildlife-scroll{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="logo">Kenya<span>Explorer</span></div>
+    <div class="nav-links">
+      <a href="#regions">Regions</a>
+      <a href="#heritage">Heritage</a>
+      <a href="#wildlife">Wildlife</a>
+      <a href="#gallery">Gallery</a>
+    </div>
+    <a href="../../index.html" class="back-btn">← Portfolio</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div>
+      <div class="hero-badge">🌍 Discover East Africa</div>
+      <h1><span class="line1">Discover</span><br/><span class="line2">KENYA</span><br/><span class="line3">Tembea Nchi</span></h1>
+      <p class="hero-sub">47 counties. 42 tribes. One extraordinary nation. From savannah sunsets to coastal paradises — explore Kenya's breathtaking diversity.</p>
+      <div class="hero-flags">
+        <span class="flag-chip">🏔️ Mt. Kenya</span>
+        <span class="flag-chip">🦁 Maasai Mara</span>
+        <span class="flag-chip">🌊 Mombasa Coast</span>
+        <span class="flag-chip">☕ Kirinyaga Tea</span>
+        <span class="flag-chip">🎵 Benga Music</span>
+      </div>
+      <button class="btn-explore" onclick="document.getElementById('regions').scrollIntoView({behavior:'smooth'})">Start Exploring ↓</button>
+      <div class="scroll-hint">SCROLL ↓</div>
+    </div>
+  </section>
+
+  <!-- Quick Facts -->
+  <section class="section" style="background:linear-gradient(180deg,var(--bg),var(--card));">
+    <div class="container">
+      <div class="facts-grid">
+        <div class="fact-card"><div class="fact-num">47</div><div class="fact-label">Counties</div></div>
+        <div class="fact-card"><div class="fact-num">42</div><div class="fact-label">Ethnic Groups</div></div>
+        <div class="fact-card"><div class="fact-num">582K</div><div class="fact-label">km² Area</div></div>
+        <div class="fact-card"><div class="fact-num">55M+</div><div class="fact-label">Population</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Regions -->
+  <section class="section" id="regions">
+    <div class="container">
+      <div class="section-badge">02 / Explore</div>
+      <h2 class="section-title">Kenya's <span style="color:var(--gold)">Regions</span></h2>
+      <p class="section-sub">Each region tells a unique story — click to explore destinations, culture, and experiences.</p>
+      <div class="regions-grid" id="regionsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Heritage -->
+  <section class="section" id="heritage" style="background:var(--card);">
+    <div class="container">
+      <div class="section-badge">03 / Culture</div>
+      <h2 class="section-title">Living <span style="color:var(--green)">Heritage</span></h2>
+      <p class="section-sub">Kenya's rich cultural tapestry woven from 42 ethnic traditions, languages, and histories.</p>
+      <div class="heritage-grid" id="heritageGrid"></div>
+    </div>
+  </section>
+
+  <!-- Wildlife -->
+  <section class="section" id="wildlife">
+    <div class="container">
+      <div class="section-badge">04 / Wildlife</div>
+      <h2 class="section-title">The <span style="color:var(--gold)">Big Five</span> & Beyond</h2>
+      <p class="section-sub">Home to the world's greatest wildlife spectacle — the annual wildebeest migration.</p>
+      <div class="wildlife-scroll" id="wildlifeGrid"></div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="section" id="gallery" style="background:var(--card);">
+    <div class="container">
+      <div class="section-badge">05 / Gallery</div>
+      <h2 class="section-title">Visual <span style="color:var(--gold)">Kenya</span></h2>
+      <p class="section-sub">A glimpse into Kenya's landscapes, people, and moments.</p>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-logo">Kenya Explorer</div>
+      <p>Built with ❤️ by Joseph Onyango Odhiambo · Nairobi, Kenya</p>
+      <p style="margin-top:.3rem;font-family:var(--mono);font-size:.7rem;color:#3d4860">Celebrating Kenyan heritage through technology</p>
+    </div>
+  </footer>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const regions = [
+      {name:'Nairobi Metro',emoji:'🏙️',bg:'linear-gradient(135deg,#1a2035,#2d3a5e)',desc:'The capital — a vibrant city of contrasts, from Kibera to Westlands. Finance, tech, culture and cuisine collide.',tags:['Business Hub','National Park','Cuisine','Nightlife'],detail:'Nairobi is one of Africa\'s most dynamic cities. Home to the UN HQ in Africa, a thriving tech scene (dubbed "Silicon Savannah"), and the only national park within a major city — where you can see lions with skyscrapers in the background.'},
+      {name:'Maasai Mara',emoji:'🦁',bg:'linear-gradient(135deg,#2d1f00,#5a3a00)',desc:'Africa\'s greatest wildlife spectacle. Home of the Great Migration and the iconic Maasai people.',tags:['Safari','Big Five','Maasai Culture','Hot Air Balloon'],detail:'The Maasai Mara is one of the world\'s most famous wildlife reserves. Every July-October, over 1.5 million wildebeest cross the Mara River in the Great Migration — one of the greatest natural shows on Earth.'},
+      {name:'Mombasa Coast',emoji:'🌊',bg:'linear-gradient(135deg,#003d5c,#006b8f)',desc:'Ancient Swahili culture meets turquoise Indian Ocean waters. Beaches, dhows, and historic Old Town.',tags:['Beach','Swahili Culture','Diving','Fort Jesus'],detail:'Mombasa\'s Old Town is a UNESCO World Heritage Site with over 600 years of Swahili, Arab, and Portuguese history. Fort Jesus, built in 1593, now stands as a museum and testament to Kenya\'s maritime heritage.'},
+      {name:'Amboseli',emoji:'🐘',bg:'linear-gradient(135deg,#1a1a00,#3d3300)',desc:'Legendary elephant herds with Mt. Kilimanjaro as backdrop. One of Africa\'s most photographed landscapes.',tags:['Elephants','Mt. Kilimanjaro','Photography','Ecosystem'],detail:'Amboseli National Park is famous for its massive elephant herds — some bulls with tusks reaching the ground. The view of Kilimanjaro rising above the Amboseli plains at dawn is one of Africa\'s most iconic vistas.'},
+      {name:'Mount Kenya',emoji:'🏔️',bg:'linear-gradient(135deg,#0a1a0a,#1a3520)',desc:'Africa\'s second highest peak at 5,199m. Glaciers, moorlands, and extraordinary endemic species.',tags:['Trekking','Glaciers','Biodiversity','National Park'],detail:'Mount Kenya is Africa\'s second-highest mountain and a UNESCO World Heritage Site. Its peaks, Batian (5,199m) and Nelion (5,188m), are permanently glaciated. The mountain creates its own weather system and supports unique highland flora.'},
+      {name:'Lamu Archipelago',emoji:'🕌',bg:'linear-gradient(135deg,#1a0d00,#3d2200)',desc:'Africa\'s oldest living town. Donkeys, dhows, and narrow streets unchanged for centuries.',tags:['UNESCO Heritage','Swahili Architecture','Dhow Racing','No Cars'],detail:'Lamu Old Town has existed since the 14th century and is East Africa\'s oldest and best-preserved Swahili settlement. There are no cars — donkeys and boats are the only transport. The annual Lamu Cultural Festival celebrates Swahili heritage every November.'}
+    ];
+
+    const heritage = [
+      {icon:'🎵',name:'Benga Music',desc:'Kenya\'s iconic musical genre — electric guitar rhythms rooted in Luo and Kikuyu folk traditions, popularized in the 1960s-70s.'},
+      {icon:'🏃',name:'Running Legacy',desc:'The Kalenjin people of the Rift Valley have produced more Olympic distance runners per capita than any group on Earth.'},
+      {icon:'🧿',name:'Maasai Beadwork',desc:'Intricate beaded jewelry tells stories of age, identity and ceremony. Each color carries meaning passed down through generations.'},
+      {icon:'🎭',name:'Ngoma Dances',desc:'Traditional drum-based ceremonies. From the Giriama\'s Charro to the Kikuyu\'s Mũgoiyo — each dance is living history.'},
+      {icon:'🏺',name:'Mijikenda Kaya',desc:'Sacred forest villages of the Mijikenda people on the coast — UNESCO-listed heritage sites, considered homes of ancestral spirits.'},
+      {icon:'🍲',name:'Culinary Heritage',desc:'Nyama choma, ugali, sukuma wiki, biryani, and mandazi — a cuisine shaped by indigenous, Arab, Indian, and British influences.'}
+    ];
+
+    const animals = [
+      {emoji:'🦁',name:'African Lion',sub:'Panthera leo',status:'Vulnerable',c:'c-vu'},
+      {emoji:'🐘',name:'African Elephant',sub:'Loxodonta africana',status:'Endangered',c:'c-en2'},
+      {emoji:'🦒',name:'Rothschild Giraffe',sub:'Giraffa camelopardalis',status:'Endangered',c:'c-en2'},
+      {emoji:'🦓',name:'Plains Zebra',sub:'Equus quagga',status:'Near Threatened',c:'c-vu'},
+      {emoji:'🐆',name:'Cheetah',sub:'Acinonyx jubatus',status:'Vulnerable',c:'c-vu'},
+      {emoji:'🦏',name:'Black Rhino',sub:'Diceros bicornis',status:'Critically Endangered',c:'c-en2'},
+      {emoji:'🦩',name:'Flamingo',sub:'Phoenicopterus roseus',status:'Least Concern',c:'c-en'},
+      {emoji:'🐊',name:'Nile Crocodile',sub:'Crocodylus niloticus',status:'Least Concern',c:'c-en'},
+      {emoji:'🦬',name:'Cape Buffalo',sub:'Syncerus caffer',status:'Near Threatened',c:'c-vu'},
+      {emoji:'🐆',name:'Leopard',sub:'Panthera pardus',status:'Vulnerable',c:'c-vu'},
+    ];
+
+    const galleryItems = [
+      {emoji:'🌅',bg:'linear-gradient(135deg,#3d1a00,#8b3a00)',label:'Savannah Sunrise'},
+      {emoji:'🦁',bg:'linear-gradient(135deg,#2d1f00,#5a3a00)',label:'Lion Pride'},
+      {emoji:'🌊',bg:'linear-gradient(135deg,#003d5c,#006b8f)',label:'Mombasa Coast'},
+      {emoji:'🏔️',bg:'linear-gradient(135deg,#0a1a0a,#1a3520)',label:'Mt. Kenya Dawn'},
+      {emoji:'🌿',bg:'linear-gradient(135deg,#0a2010,#1a4020)',label:'Tea Highlands'},
+      {emoji:'🦒',bg:'linear-gradient(135deg,#2a1500,#5c2a00)',label:'Amboseli Giants'},
+    ];
+
+    // Render regions
+    document.getElementById('regionsGrid').innerHTML = regions.map((r,i)=>`
+      <div class="region-card" onclick="openModal(${i})">
+        <div class="region-img" style="background:${r.bg}">${r.emoji}</div>
+        <div class="region-body">
+          <div class="region-name">${r.name}</div>
+          <p class="region-desc">${r.desc}</p>
+          <div class="region-tags">${r.tags.map(t=>`<span class="rtag">${t}</span>`).join('')}</div>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('heritageGrid').innerHTML = heritage.map(h=>`
+      <div class="heritage-item">
+        <div class="heritage-icon">${h.icon}</div>
+        <div class="heritage-content">
+          <h4>${h.name}</h4>
+          <p>${h.desc}</p>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('wildlifeGrid').innerHTML = animals.map(a=>`
+      <div class="animal-card">
+        <div class="animal-emoji">${a.emoji}</div>
+        <div class="animal-name">${a.name}</div>
+        <div class="animal-sub" style="font-style:italic">${a.sub}</div>
+        <span class="conservation ${a.c}">${a.status}</span>
+      </div>`).join('');
+
+    document.getElementById('galleryGrid').innerHTML = galleryItems.map(g=>`
+      <div class="gallery-item" style="background:${g.bg}">${g.emoji}</div>`).join('');
+
+    function openModal(i) {
+      const r = regions[i];
+      document.getElementById('modalContent').innerHTML = `
+        <div style="font-size:3rem;margin-bottom:1rem;">${r.emoji}</div>
+        <div style="font-family:var(--mono);font-size:.7rem;color:var(--green);letter-spacing:2px;margin-bottom:.5rem">REGION</div>
+        <h2>${r.name}</h2>
+        <p style="margin-top:1rem;">${r.detail}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1.5rem;">${r.tags.map(t=>`<span class="rtag">${t}</span>`).join('')}</div>`;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+    function closeModal(e) {
+      if(!e||e.target===document.getElementById('modalOverlay')||e.type==='click'&&!e.target.classList.contains('modal')) {
+        document.getElementById('modalOverlay').classList.remove('open');
+      }
+    }
+  </script>
+</body>
+</html>

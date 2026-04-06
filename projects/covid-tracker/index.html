@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>COVID-19 Global Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#060c14;--card:#0d1825;--gold:#e8a830;--cyan:#00d4ff;--red:#ff4757;--green:#39ff85;--yellow:#ffd700;--text:#e8eaf0;--dim:#7a8499;--border:#1e2d45;--mono:'Space Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;}
+    .header{padding:1rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(6,12,20,.95);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;}
+    .logo{font-family:var(--mono);font-size:.95rem;color:var(--gold);letter-spacing:1px;}
+    .logo span{color:var(--red);}
+    .back-btn{font-family:var(--mono);font-size:.75rem;color:var(--dim);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .2s;}
+    .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .last-updated{font-family:var(--mono);font-size:.7rem;color:var(--dim);}
+    .page{max-width:1200px;margin:0 auto;padding:2rem;}
+    h1{font-family:var(--display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:.4rem;}
+    h1 span{color:var(--red);}
+    .subtitle{color:var(--dim);font-size:.95rem;margin-bottom:2rem;}
+
+    /* Controls */
+    .controls{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;align-items:center;}
+    .control-group{display:flex;flex-direction:column;gap:.3rem;}
+    .control-label{font-family:var(--mono);font-size:.68rem;color:var(--dim);letter-spacing:1px;}
+    .select-styled{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.5rem .9rem;color:var(--text);font-family:var(--mono);font-size:.78rem;cursor:pointer;outline:none;min-width:160px;}
+    .select-styled:focus{border-color:var(--gold);}
+    .filter-btn{padding:.5rem 1rem;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:var(--mono);font-size:.75rem;cursor:pointer;transition:all .2s;}
+    .filter-btn.active{background:var(--gold);color:#060c14;border-color:var(--gold);font-weight:700;}
+    .filter-btn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
+
+    /* Stats Cards */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem;position:relative;overflow:hidden;transition:all .3s;}
+    .stat-card:hover{transform:translateY(-3px);}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .stat-confirmed::before{background:var(--cyan);}
+    .stat-deaths::before{background:var(--red);}
+    .stat-recovered::before{background:var(--green);}
+    .stat-active::before{background:var(--yellow);}
+    .stat-icon{font-size:1.5rem;margin-bottom:.8rem;}
+    .stat-label{font-family:var(--mono);font-size:.68rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:.4rem;}
+    .stat-value{font-family:var(--display);font-size:1.8rem;font-weight:800;line-height:1;}
+    .stat-change{font-family:var(--mono);font-size:.72rem;margin-top:.4rem;}
+    .positive{color:var(--red);}
+    .negative{color:var(--green);}
+
+    /* Charts */
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:2rem;}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;}
+    .chart-title{font-family:var(--mono);font-size:.78rem;color:var(--dim);letter-spacing:2px;margin-bottom:1.2rem;text-transform:uppercase;}
+    .chart-wrap{position:relative;height:260px;}
+
+    /* Table */
+    .table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2rem;}
+    .table-header{padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+    .table-header h3{font-family:var(--mono);font-size:.78rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+    .search-table{background:transparent;border:1px solid var(--border);border-radius:6px;padding:.4rem .8rem;color:var(--text);font-family:var(--mono);font-size:.75rem;outline:none;width:200px;}
+    .search-table:focus{border-color:var(--gold);}
+    .search-table::placeholder{color:#3d4860;}
+    table{width:100%;border-collapse:collapse;}
+    th{padding:.75rem 1.5rem;font-family:var(--mono);font-size:.68rem;color:var(--dim);letter-spacing:1px;text-align:left;border-bottom:1px solid var(--border);background:#070b12;cursor:pointer;}
+    th:hover{color:var(--gold);}
+    td{padding:.8rem 1.5rem;font-size:.88rem;border-bottom:1px solid rgba(30,45,69,.5);}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(232,168,48,.04);}
+    .flag{font-size:1.1rem;margin-right:.4rem;}
+    .country-name{font-weight:500;}
+    .bar-cell{display:flex;align-items:center;gap:.7rem;}
+    .mini-bar{height:6px;border-radius:3px;min-width:4px;}
+
+    @media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr;}.charts-grid{grid-template-columns:1fr;}}
+    @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}.page{padding:1.5rem 1rem;}.controls{flex-direction:column;align-items:flex-start;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">COVID<span>-19</span> Global Tracker</div>
+    <div class="last-updated" id="lastUpdated">Data as of simulation</div>
+    <a href="../../index.html" class="back-btn">← Portfolio</a>
+  </div>
+
+  <div class="page">
+    <h1>Global <span>COVID-19</span> Dashboard</h1>
+    <p class="subtitle">Python-powered data analysis · Interactive visualization · Country filtering · Built by Joseph O.</p>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">REGION</span>
+        <select class="select-styled" id="regionSelect" onchange="applyFilter()">
+          <option value="all">All Regions</option>
+          <option value="africa">Africa</option>
+          <option value="asia">Asia</option>
+          <option value="europe">Europe</option>
+          <option value="americas">Americas</option>
+          <option value="oceania">Oceania</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <span class="control-label">TIME PERIOD</span>
+        <div style="display:flex;gap:.4rem;">
+          <button class="filter-btn active" onclick="setPeriod(this,'7d')">7D</button>
+          <button class="filter-btn" onclick="setPeriod(this,'30d')">30D</button>
+          <button class="filter-btn" onclick="setPeriod(this,'90d')">90D</button>
+          <button class="filter-btn" onclick="setPeriod(this,'all')">All</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">METRIC</span>
+        <select class="select-styled" id="metricSelect" onchange="updateCharts()">
+          <option value="confirmed">Confirmed Cases</option>
+          <option value="deaths">Deaths</option>
+          <option value="recovered">Recovered</option>
+          <option value="active">Active</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card stat-confirmed">
+        <div class="stat-icon">🦠</div>
+        <div class="stat-label">Confirmed Cases</div>
+        <div class="stat-value" id="totalConfirmed">—</div>
+        <div class="stat-change positive" id="changeConfirmed">+0 today</div>
+      </div>
+      <div class="stat-card stat-deaths">
+        <div class="stat-icon">💔</div>
+        <div class="stat-label">Deaths</div>
+        <div class="stat-value" id="totalDeaths">—</div>
+        <div class="stat-change positive" id="changeDeaths">+0 today</div>
+      </div>
+      <div class="stat-card stat-recovered">
+        <div class="stat-icon">💚</div>
+        <div class="stat-label">Recovered</div>
+        <div class="stat-value" id="totalRecovered">—</div>
+        <div class="stat-change negative" id="changeRecovered">+0 today</div>
+      </div>
+      <div class="stat-card stat-active">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">Active Cases</div>
+        <div class="stat-value" id="totalActive">—</div>
+        <div class="stat-change" id="changeActive" style="color:var(--yellow)">updated</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">TREND OVER TIME</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">CASE DISTRIBUTION</div>
+        <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Top Countries Bar -->
+    <div class="chart-card" style="margin-bottom:2rem;">
+      <div class="chart-title">TOP 10 COUNTRIES BY CONFIRMED CASES</div>
+      <div class="chart-wrap" style="height:300px;"><canvas id="barChart"></canvas></div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Country Breakdown</h3>
+        <input class="search-table" id="tableSearch" placeholder="Search country..." oninput="filterTable()"/>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable('country')">Country ↕</th>
+              <th onclick="sortTable('confirmed')">Confirmed ↕</th>
+              <th onclick="sortTable('deaths')">Deaths ↕</th>
+              <th onclick="sortTable('recovered')">Recovered ↕</th>
+              <th>Death Rate</th>
+              <th>Visual</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const countryData = [
+      {flag:'🇺🇸',country:'United States',region:'americas',confirmed:103702779,deaths:1127152,recovered:99842151,active:2733476},
+      {flag:'🇮🇳',country:'India',region:'asia',confirmed:44690014,deaths:530779,recovered:44157671,active:1564},
+      {flag:'🇫🇷',country:'France',region:'europe',confirmed:38907122,deaths:162671,recovered:38219451,active:525000},
+      {flag:'🇩🇪',country:'Germany',region:'europe',confirmed:38438800,deaths:174979,recovered:37700000,active:563821},
+      {flag:'🇧🇷',country:'Brazil',region:'americas',confirmed:37076053,deaths:699276,recovered:36274985,active:101792},
+      {flag:'🇯🇵',country:'Japan',region:'asia',confirmed:33803572,deaths:74694,recovered:33619453,active:109425},
+      {flag:'🇰🇷',country:'South Korea',region:'asia',confirmed:30618937,deaths:34101,recovered:30438528,active:146308},
+      {flag:'🇮🇹',country:'Italy',region:'europe',confirmed:25931000,deaths:188513,recovered:25617000,active:125487},
+      {flag:'🇬🇧',country:'United Kingdom',region:'europe',confirmed:24655000,deaths:221880,recovered:24230000,active:203120},
+      {flag:'🇷🇺',country:'Russia',region:'europe',confirmed:22104337,deaths:400688,recovered:21592745,active:110904},
+      {flag:'🇲🇽',country:'Mexico',region:'americas',confirmed:7633355,deaths:334257,recovered:7187198,active:111900},
+      {flag:'🇿🇦',country:'South Africa',region:'africa',confirmed:4072533,deaths:102595,recovered:3964831,active:5107},
+      {flag:'🇰🇪',country:'Kenya',region:'africa',confirmed:342552,deaths:5688,recovered:316932,active:19932},
+      {flag:'🇳🇬',country:'Nigeria',region:'africa',confirmed:267218,deaths:3155,recovered:260248,active:3815},
+      {flag:'🇦🇺',country:'Australia',region:'oceania',confirmed:11473518,deaths:22878,recovered:11400000,active:50640},
+      {flag:'🇨🇦',country:'Canada',region:'americas',confirmed:4644590,deaths:51521,recovered:4578219,active:14850},
+    ];
+
+    let filteredData = [...countryData];
+    let trendChart, donutChart, barChart;
+    let currentPeriod = '7d';
+
+    function fmt(n){if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toString();}
+
+    function updateStats(data) {
+      const totals = data.reduce((acc,c)=>({confirmed:acc.confirmed+c.confirmed,deaths:acc.deaths+c.deaths,recovered:acc.recovered+c.recovered,active:acc.active+c.active}),{confirmed:0,deaths:0,recovered:0,active:0});
+      document.getElementById('totalConfirmed').textContent = fmt(totals.confirmed);
+      document.getElementById('totalDeaths').textContent = fmt(totals.deaths);
+      document.getElementById('totalRecovered').textContent = fmt(totals.recovered);
+      document.getElementById('totalActive').textContent = fmt(totals.active);
+      document.getElementById('changeConfirmed').textContent = '+' + fmt(Math.floor(totals.confirmed*0.00008)) + ' today';
+      document.getElementById('changeDeaths').textContent = '+' + fmt(Math.floor(totals.deaths*0.0001)) + ' today';
+      document.getElementById('changeRecovered').textContent = '+' + fmt(Math.floor(totals.recovered*0.00009)) + ' today';
+    }
+
+    function generateTrendData(days=30) {
+      const labels = [];
+      const confirmed = [], deaths = [], recovered = [];
+      const now = new Date();
+      for(let i=days-1;i>=0;i--) {
+        const d = new Date(now); d.setDate(d.getDate()-i);
+        labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+        const base = 450000 + Math.sin(i*0.3)*50000;
+        confirmed.push(Math.round(base + Math.random()*80000));
+        deaths.push(Math.round(base*0.012 + Math.random()*2000));
+        recovered.push(Math.round(base*0.85 + Math.random()*30000));
+      }
+      return {labels,confirmed,deaths,recovered};
+    }
+
+    function initTrendChart() {
+      const days = currentPeriod==='7d'?7:currentPeriod==='30d'?30:currentPeriod==='90d'?90:180;
+      const data = generateTrendData(days);
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      if(trendChart) trendChart.destroy();
+      trendChart = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels:data.labels,
+          datasets:[
+            {label:'Confirmed',data:data.confirmed,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.08)',borderWidth:2,pointRadius:0,tension:.4,fill:true},
+            {label:'Recovered',data:data.recovered,borderColor:'#39ff85',backgroundColor:'rgba(57,255,133,.05)',borderWidth:2,pointRadius:0,tension:.4,fill:true},
+            {label:'Deaths',data:data.deaths,borderColor:'#ff4757',backgroundColor:'rgba(255,71,87,.05)',borderWidth:2,pointRadius:0,tension:.4,fill:true}
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#7a8499',font:{family:'Space Mono',size:10},boxWidth:12}}},
+          scales:{
+            x:{grid:{color:'rgba(30,45,69,.5)'},ticks:{color:'#7a8499',font:{family:'Space Mono',size:9},maxTicksLimit:6}},
+            y:{grid:{color:'rgba(30,45,69,.5)'},ticks:{color:'#7a8499',font:{family:'Space Mono',size:9},callback:v=>fmt(v)}}
+          }
+        }
+      });
+    }
+
+    function initDonutChart() {
+      const totals = filteredData.reduce((a,c)=>({confirmed:a.confirmed+c.confirmed,deaths:a.deaths+c.deaths,recovered:a.recovered+c.recovered,active:a.active+c.active}),{confirmed:0,deaths:0,recovered:0,active:0});
+      const ctx = document.getElementById('donutChart').getContext('2d');
+      if(donutChart) donutChart.destroy();
+      donutChart = new Chart(ctx, {
+        type:'doughnut',
+        data:{
+          labels:['Recovered','Active','Deaths'],
+          datasets:[{data:[totals.recovered,totals.active,totals.deaths],backgroundColor:['rgba(57,255,133,.7)','rgba(255,215,0,.7)','rgba(255,71,87,.7)'],borderColor:['#39ff85','#ffd700','#ff4757'],borderWidth:2}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom',labels:{color:'#7a8499',font:{family:'Space Mono',size:10},boxWidth:12,padding:16}}}
+        }
+      });
+    }
+
+    function initBarChart() {
+      const top10 = [...filteredData].sort((a,b)=>b.confirmed-a.confirmed).slice(0,10);
+      const ctx = document.getElementById('barChart').getContext('2d');
+      if(barChart) barChart.destroy();
+      barChart = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels:top10.map(c=>c.flag+' '+c.country),
+          datasets:[{label:'Confirmed Cases',data:top10.map(c=>c.confirmed),backgroundColor:'rgba(232,168,48,.7)',borderColor:'#e8a830',borderWidth:1,borderRadius:4}]
+        },
+        options:{
+          indexAxis:'y',
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{grid:{color:'rgba(30,45,69,.5)'},ticks:{color:'#7a8499',font:{family:'Space Mono',size:9},callback:v=>fmt(v)}},
+            y:{grid:{display:false},ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:11}}}
+          }
+        }
+      });
+    }
+
+    function renderTable(data=filteredData) {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      const shown = q ? data.filter(c=>c.country.toLowerCase().includes(q)) : data;
+      const max = Math.max(...shown.map(c=>c.confirmed));
+      document.getElementById('tableBody').innerHTML = shown.map(c=>{
+        const rate = ((c.deaths/c.confirmed)*100).toFixed(2);
+        const w = Math.max(4,Math.round((c.confirmed/max)*120));
+        return `<tr>
+          <td><span class="flag">${c.flag}</span><span class="country-name">${c.country}</span></td>
+          <td style="color:var(--cyan)">${c.confirmed.toLocaleString()}</td>
+          <td style="color:var(--red)">${c.deaths.toLocaleString()}</td>
+          <td style="color:var(--green)">${c.recovered.toLocaleString()}</td>
+          <td style="color:${parseFloat(rate)>2?'var(--red)':'var(--yellow)'}">${rate}%</td>
+          <td class="bar-cell"><div class="mini-bar" style="width:${w}px;background:var(--cyan);opacity:.6"></div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterTable(){renderTable();}
+
+    let sortDir = {};
+    function sortTable(col) {
+      sortDir[col] = !sortDir[col];
+      filteredData.sort((a,b)=>sortDir[col]?(b[col]||0)-(a[col]||0):(a[col]||0)-(b[col]||0));
+      if(col==='country'){filteredData.sort((a,b)=>sortDir[col]?b.country.localeCompare(a.country):a.country.localeCompare(b.country));}
+      renderTable();
+    }
+
+    function applyFilter() {
+      const r = document.getElementById('regionSelect').value;
+      filteredData = r==='all' ? [...countryData] : countryData.filter(c=>c.region===r);
+      updateStats(filteredData);
+      initDonutChart();
+      initBarChart();
+      renderTable();
+    }
+
+    function setPeriod(btn,period) {
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPeriod = period;
+      initTrendChart();
+    }
+
+    function updateCharts(){initTrendChart();}
+
+    // Init
+    document.getElementById('lastUpdated').textContent = 'Simulated data · ' + new Date().toLocaleDateString();
+    updateStats(countryData);
+    initTrendChart();
+    initDonutChart();
+    initBarChart();
+    renderTable();
+  </script>
+</body>
+</html>

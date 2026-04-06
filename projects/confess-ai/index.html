@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Confess.AI — Anonymous AI Advice Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --bg:#06090f; --card:#0d1220; --gold:#e8a830; --cyan:#00d4ff; --green:#39ff85; --red:#ff4757; --text:#e8eaf0; --dim:#7a8499; --border:#1e2d45; --mono:'Space Mono',monospace; --display:'Syne',sans-serif; --body:'DM Sans',sans-serif; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;}
+    a{color:inherit;text-decoration:none;}
+
+    .header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .logo{font-family:var(--mono);font-size:1.1rem;color:var(--gold);letter-spacing:2px;}
+    .logo span{color:var(--cyan);}
+    .back-btn{font-family:var(--mono);font-size:0.8rem;color:var(--dim);border:1px solid var(--border);padding:.4rem .9rem;border-radius:4px;cursor:pointer;transition:all .3s;}
+    .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+    .hero{text-align:center;padding:4rem 2rem 2rem;max-width:700px;margin:0 auto;}
+    .hero h1{font-family:var(--display);font-size:clamp(2rem,6vw,3.5rem);font-weight:800;margin-bottom:1rem;}
+    .hero h1 span{color:transparent;-webkit-text-stroke:2px var(--gold);}
+    .hero p{color:var(--dim);font-size:1rem;line-height:1.7;margin-bottom:.5rem;}
+    .badges{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem;}
+    .badge{padding:.25rem .7rem;border-radius:100px;font-family:var(--mono);font-size:.72rem;}
+    .badge-free{background:rgba(57,255,133,.08);border:1px solid rgba(57,255,133,.3);color:var(--green);}
+    .badge-anon{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:var(--cyan);}
+    .badge-ai{background:rgba(232,168,48,.08);border:1px solid rgba(232,168,48,.3);color:var(--gold);}
+
+    .main{max-width:760px;margin:0 auto;padding:2rem;}
+
+    .themes{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center;}
+    .theme-btn{padding:.35rem .9rem;border-radius:100px;font-family:var(--mono);font-size:.72rem;border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .3s;background:transparent;}
+    .theme-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,168,48,.08);}
+
+    .confess-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:2rem;}
+    .confess-box label{font-family:var(--mono);font-size:.75rem;color:var(--dim);letter-spacing:2px;display:block;margin-bottom:.8rem;}
+    .confess-textarea{width:100%;background:#070b10;border:1px solid var(--border);border-radius:8px;padding:1rem;color:var(--text);font-family:var(--body);font-size:.95rem;line-height:1.7;resize:none;outline:none;transition:border-color .3s;}
+    .confess-textarea:focus{border-color:var(--gold);}
+    .confess-textarea::placeholder{color:#3d4860;}
+    .form-footer{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;flex-wrap:gap;}
+    .char-count{font-family:var(--mono);font-size:.72rem;color:var(--dim);}
+    .mood-select{background:#070b10;border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem;color:var(--dim);font-family:var(--mono);font-size:.75rem;cursor:pointer;outline:none;}
+    .submit-btn{padding:.7rem 1.8rem;background:var(--gold);color:#060910;font-family:var(--mono);font-size:.82rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .3s;letter-spacing:.5px;}
+    .submit-btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,168,48,.25);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+    .response-area{display:none;}
+    .response-area.show{display:block;}
+    .response-card{background:linear-gradient(135deg,#0d1825,#121e2e);border:1px solid rgba(0,212,255,.2);border-radius:16px;padding:2rem;position:relative;overflow:hidden;}
+    .response-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--cyan),var(--green));}
+    .response-header{display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem;}
+    .ai-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--cyan));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.7rem;font-weight:700;color:#060910;flex-shrink:0;}
+    .ai-label{font-family:var(--mono);font-size:.78rem;color:var(--cyan);}
+    .ai-label span{color:var(--dim);display:block;font-size:.7rem;margin-top:.1rem;}
+    .response-text{color:var(--text);line-height:1.8;font-size:.95rem;}
+    .response-text.typing::after{content:'▌';color:var(--gold);animation:blink 1s step-end infinite;}
+    @keyframes blink{50%{opacity:0;}}
+    .response-actions{display:flex;gap:.7rem;margin-top:1.2rem;flex-wrap:wrap;}
+    .r-btn{padding:.4rem .9rem;border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:.72rem;color:var(--dim);cursor:pointer;background:transparent;transition:all .3s;}
+    .r-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+    .r-btn.liked{border-color:var(--green);color:var(--green);}
+
+    .feed-section{margin-top:2.5rem;}
+    .feed-title{font-family:var(--mono);font-size:.75rem;color:var(--dim);letter-spacing:2px;margin-bottom:1rem;}
+    .feed-grid{display:flex;flex-direction:column;gap:1rem;}
+    .feed-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;transition:all .3s;}
+    .feed-item:hover{border-color:rgba(232,168,48,.25);}
+    .feed-meta{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;}
+    .anon-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;}
+    .feed-anon{font-family:var(--mono);font-size:.7rem;color:var(--dim);}
+    .feed-mood{font-family:var(--mono);font-size:.65rem;padding:.15rem .5rem;border-radius:100px;}
+    .feed-confession{color:var(--text);font-size:.88rem;line-height:1.6;margin-bottom:.7rem;}
+    .feed-response{background:#070b10;border-left:2px solid var(--cyan);padding:.6rem .8rem;border-radius:0 6px 6px 0;color:var(--dim);font-size:.83rem;line-height:1.6;}
+    .feed-timestamp{font-family:var(--mono);font-size:.68rem;color:#3d4860;margin-top:.5rem;}
+    .loading-dots::after{content:'...';animation:dots 1.5s infinite;}
+    @keyframes dots{0%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'.'}}
+    @media(max-width:600px){.main{padding:1.5rem 1rem;}.hero{padding:3rem 1.5rem 1.5rem;}.form-footer{flex-direction:column;align-items:flex-start;gap:.8rem;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Confess<span>.AI</span></div>
+    <a href="../../index.html" class="back-btn">← Back to Portfolio</a>
+  </div>
+
+  <div class="hero">
+    <h1>Confess Anonymously.<br/>Get Real <span>AI Advice.</span></h1>
+    <p>A safe, anonymous space to share your thoughts, secrets, and struggles. Our AI responds with empathy, wisdom, and zero judgment.</p>
+    <div class="badges">
+      <span class="badge badge-anon">100% Anonymous</span>
+      <span class="badge badge-ai">AI-Powered</span>
+      <span class="badge badge-free">Free to Use</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Theme Selector -->
+    <div class="themes">
+      <span style="font-family:var(--mono);font-size:.72rem;color:var(--dim);align-self:center;">Theme:</span>
+      <button class="theme-btn active" onclick="setTheme('advice')">💡 Advice</button>
+      <button class="theme-btn" onclick="setTheme('motivation')">🔥 Motivation</button>
+      <button class="theme-btn" onclick="setTheme('spiritual')">✨ Spiritual</button>
+      <button class="theme-btn" onclick="setTheme('therapy')">🧠 Therapy Mode</button>
+    </div>
+
+    <!-- Input Box -->
+    <div class="confess-box">
+      <label>YOUR CONFESSION (ANONYMOUS)</label>
+      <textarea class="confess-textarea" id="confessionInput" rows="5" maxlength="600" placeholder="Type your confession, worry, secret, or anything on your mind...&#10;&#10;No names. No judgement. Just honesty."></textarea>
+      <div class="form-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;gap:.8rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:.8rem;">
+          <span class="char-count" id="charCount">0 / 600</span>
+          <select class="mood-select" id="moodSelect">
+            <option value="neutral">😐 Neutral</option>
+            <option value="anxious">😰 Anxious</option>
+            <option value="sad">😔 Sad</option>
+            <option value="guilty">😖 Guilty</option>
+            <option value="angry">😤 Angry</option>
+            <option value="confused">🤔 Confused</option>
+            <option value="hopeful">🙂 Hopeful</option>
+          </select>
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="submitConfession()">Send to AI ↗</button>
+      </div>
+    </div>
+
+    <!-- Response Area -->
+    <div class="response-area" id="responseArea">
+      <div class="response-card">
+        <div class="response-header">
+          <div class="ai-avatar">AI</div>
+          <div class="ai-label">
+            Confess.AI Response
+            <span id="responseMode">Advice Mode</span>
+          </div>
+        </div>
+        <div class="response-text" id="responseText"></div>
+        <div class="response-actions">
+          <button class="r-btn" id="likeBtn" onclick="likeResponse()">👍 Helpful</button>
+          <button class="r-btn" onclick="copyResponse()">📋 Copy</button>
+          <button class="r-btn" onclick="newConfession()">✍️ New Confession</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed-section">
+      <div class="feed-title">RECENT CONFESSIONS (ANONYMIZED)</div>
+      <div class="feed-grid" id="feedGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentTheme = 'advice';
+    const themes = {
+      advice: { label: 'Advice Mode', color: '#e8a830', prompt: 'You are a wise, empathetic advisor on Confess.AI. Give practical, compassionate advice.' },
+      motivation: { label: 'Motivation Mode', color: '#ff6b35', prompt: 'You are an energetic motivational coach on Confess.AI. Be uplifting, powerful, and inspiring.' },
+      spiritual: { label: 'Spiritual Mode', color: '#a78bfa', prompt: 'You are a gentle spiritual guide on Confess.AI. Give wisdom rooted in universal spiritual principles.' },
+      therapy: { label: 'Therapy Mode', color: '#00d4ff', prompt: 'You are a compassionate therapist on Confess.AI. Use CBT-inspired techniques. Be validating and thoughtful.' }
+    };
+
+    const seedFeed = [
+      { anon: 'Anon#7823', color:'#e8a830', mood: '😖 Guilty', text: 'I lied on my CV and got the job. Now I\'m terrified they\'ll find out.', response: 'This is more common than you think. Use this as fuel — learn everything about the role now. Competence will replace imposter syndrome. Start upskilling quietly and let results speak. You\'re not a fraud; you\'re someone who took a chance on themselves.', time: '2h ago' },
+      { anon: 'Anon#3341', color:'#00d4ff', mood: '😔 Sad', text: 'I feel like I\'ve been coding for years but still feel like a junior. When does it get better?', response: 'The "junior feeling" never fully leaves — that\'s actually a sign you\'re growing. Senior developers feel it too, they just stop fighting it. Ship one thing you\'re proud of today. Confidence is built through proof, not time.', time: '5h ago' },
+      { anon: 'Anon#9104', color:'#39ff85', mood: '🤔 Confused', text: 'I don\'t know if I should keep pursuing tech or go back to my original career. I\'m 31.', response: '31 is early. Most great developers started late. The question isn\'t your age — it\'s what energizes you at 11pm. If it\'s code, that\'s your answer. If it\'s the other career, honor that too. There\'s no wrong choice, only aligned ones.', time: '1d ago' }
+    ];
+
+    function renderFeed(items) {
+      const grid = document.getElementById('feedGrid');
+      grid.innerHTML = items.map(item => `
+        <div class="feed-item">
+          <div class="feed-meta">
+            <div class="anon-avatar" style="background:${item.color}22;border:1px solid ${item.color}40;color:${item.color}">${item.anon[0]}</div>
+            <span class="feed-anon">${item.anon}</span>
+            <span class="feed-mood" style="background:rgba(255,255,255,.05);color:var(--dim)">${item.mood}</span>
+          </div>
+          <div class="feed-confession">"${item.text}"</div>
+          <div class="feed-response">🤖 ${item.response}</div>
+          <div class="feed-timestamp">${item.time}</div>
+        </div>`).join('');
+    }
+    renderFeed(seedFeed);
+
+    // Char counter
+    const input = document.getElementById('confessionInput');
+    input.addEventListener('input', () => {
+      document.getElementById('charCount').textContent = `${input.value.length} / 600`;
+    });
+
+    function setTheme(t) {
+      currentTheme = t;
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    async function submitConfession() {
+      const text = input.value.trim();
+      if (!text || text.length < 10) { alert('Please write at least 10 characters.'); return; }
+      const mood = document.getElementById('moodSelect').value;
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'AI is reading...';
+
+      const responseArea = document.getElementById('responseArea');
+      const responseText = document.getElementById('responseText');
+      responseArea.classList.add('show');
+      responseText.className = 'response-text typing';
+      responseText.textContent = 'Thinking';
+      document.getElementById('responseMode').textContent = themes[currentTheme].label;
+
+      const systemPrompt = `${themes[currentTheme].prompt} The user's mood is: ${mood}. Keep response under 150 words. Be warm, direct, and genuinely helpful. Do not use generic platitudes.`;
+
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 300,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: `Confession: ${text}` }]
+          })
+        });
+        const data = await res.json();
+        const reply = data.content?.[0]?.text || getOfflineResponse(mood, currentTheme);
+        typewriterEffect(responseText, reply);
+        addToFeed(text, reply, mood);
+      } catch (e) {
+        const fallback = getOfflineResponse(mood, currentTheme);
+        typewriterEffect(responseText, fallback);
+        addToFeed(text, fallback, mood);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Send to AI ↗';
+    }
+
+    function typewriterEffect(el, text) {
+      el.className = 'response-text';
+      el.textContent = '';
+      let i = 0;
+      const t = setInterval(() => {
+        el.textContent += text[i++];
+        if (i >= text.length) clearInterval(t);
+      }, 18);
+    }
+
+    function getOfflineResponse(mood, theme) {
+      const responses = {
+        advice: { anxious: "Anxiety often lies — it magnifies threats and shrinks your ability to handle them. Write down exactly what you're afraid of, then write one action you can take today. Movement is the antidote to anxiety.", sad: "Sadness deserves to be felt, not fixed. Give yourself permission to be here. And when you're ready — one small act of care for yourself, just one.", guilty: "Guilt means you have a conscience — that's valuable. Now turn it into action: apologize, make amends, or simply commit to doing better. Guilt isn't meant to be a prison.", default: "Whatever you're carrying, you don't have to carry it alone. Break it into one thing you can control today. Start there. Everything else follows." },
+        motivation: { default: "This feeling? This resistance? It's proof you're on the edge of something real. The discomfort is the growth. You haven't come this far to stop now. Get up. Move. One step." },
+        spiritual: { default: "Everything you're experiencing is part of a larger unfolding. Trust that this season has meaning. Sit with it. Breathe. You are more resilient than this moment feels." },
+        therapy: { default: "What you're feeling makes complete sense given what you've described. Let's not rush to fix it — first, just notice it. Where do you feel this in your body? What does it need?" }
+      };
+      const pool = responses[theme] || responses.advice;
+      return pool[mood] || pool.default;
+    }
+
+    function addToFeed(confession, response, mood) {
+      const moodEmoji = { anxious:'😰', sad:'😔', guilty:'😖', angry:'😤', confused:'🤔', hopeful:'🙂', neutral:'😐' };
+      const colors = ['#e8a830','#00d4ff','#39ff85','#a78bfa','#ff6b35'];
+      const newItem = {
+        anon: `Anon#${Math.floor(1000+Math.random()*9000)}`,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        mood: `${moodEmoji[mood]||'😐'} ${mood.charAt(0).toUpperCase()+mood.slice(1)}`,
+        text: confession.length > 100 ? confession.slice(0,100)+'...' : confession,
+        response: response.length > 120 ? response.slice(0,120)+'...' : response,
+        time: 'Just now'
+      };
+      seedFeed.unshift(newItem);
+      if (seedFeed.length > 6) seedFeed.pop();
+      renderFeed(seedFeed);
+    }
+
+    function likeResponse() {
+      const btn = document.getElementById('likeBtn');
+      btn.classList.add('liked');
+      btn.textContent = '✓ Marked Helpful';
+    }
+    function copyResponse() {
+      navigator.clipboard.writeText(document.getElementById('responseText').textContent);
+      const btns = document.querySelectorAll('.r-btn');
+      btns[1].textContent = '✓ Copied!';
+      setTimeout(() => btns[1].textContent = '📋 Copy', 2000);
+    }
+    function newConfession() {
+      document.getElementById('confessionInput').value = '';
+      document.getElementById('charCount').textContent = '0 / 600';
+      document.getElementById('responseArea').classList.remove('show');
+      input.focus();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>API Explorer — RESTful API Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#060c14;--card:#0d1825;--card2:#111f30;--gold:#e8a830;--cyan:#00d4ff;--green:#39ff85;--red:#ff4757;--purple:#a78bfa;--text:#e8eaf0;--dim:#7a8499;--border:#1e2d45;--mono:'Space Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    .header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(6,12,20,.95);display:flex;align-items:center;justify-content:space-between;}
+    .logo{font-family:var(--mono);font-size:.9rem;color:var(--gold);letter-spacing:1px;}
+    .logo span{color:var(--cyan);}
+    .back-btn{font-family:var(--mono);font-size:.72rem;color:var(--dim);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;text-decoration:none;transition:all .2s;}
+    .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .layout{display:grid;grid-template-columns:280px 1fr;flex:1;height:calc(100vh - 57px);}
+    .sidebar{background:var(--card);border-right:1px solid var(--border);overflow-y:auto;padding:1rem 0;}
+    .sidebar-title{font-family:var(--mono);font-size:.65rem;color:var(--dim);letter-spacing:2px;padding:.5rem 1rem;text-transform:uppercase;}
+    .endpoint-group{margin-bottom:.5rem;}
+    .endpoint-item{display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;cursor:pointer;transition:background .2s;}
+    .endpoint-item:hover{background:rgba(255,255,255,.04);}
+    .endpoint-item.active{background:rgba(232,168,48,.08);border-right:2px solid var(--gold);}
+    .method{padding:.15rem .45rem;border-radius:3px;font-family:var(--mono);font-size:.62rem;font-weight:700;flex-shrink:0;min-width:42px;text-align:center;}
+    .m-get{background:rgba(57,255,133,.15);color:var(--green);}
+    .m-post{background:rgba(0,212,255,.15);color:var(--cyan);}
+    .m-put{background:rgba(232,168,48,.15);color:var(--gold);}
+    .m-delete{background:rgba(255,71,87,.15);color:var(--red);}
+    .endpoint-path{font-family:var(--mono);font-size:.73rem;color:var(--dim);}
+    .endpoint-name{font-size:.8rem;color:var(--text);font-weight:500;}
+    .main{display:flex;flex-direction:column;overflow:hidden;}
+    .request-area{padding:1.5rem;border-bottom:1px solid var(--border);background:var(--card2);}
+    .req-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;}
+    .req-method{padding:.5rem .9rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;font-weight:700;border:none;}
+    .req-url{flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;color:var(--text);font-family:var(--mono);font-size:.78rem;outline:none;min-width:200px;}
+    .req-url:focus{border-color:var(--gold);}
+    .send-btn{padding:.6rem 1.4rem;background:var(--gold);color:#060910;font-family:var(--mono);font-size:.8rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+    .send-btn:hover{filter:brightness(1.1);}
+    .send-btn:disabled{opacity:.6;cursor:not-allowed;}
+    .params-section{display:flex;flex-wrap:wrap;gap:.8rem;}
+    .param-group{display:flex;flex-direction:column;gap:.3rem;}
+    .param-label{font-family:var(--mono);font-size:.65rem;color:var(--dim);letter-spacing:1px;}
+    .param-input{padding:.4rem .7rem;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:.75rem;outline:none;min-width:120px;}
+    .param-input:focus{border-color:var(--cyan);}
+    .param-select{padding:.4rem .7rem;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:.75rem;cursor:pointer;outline:none;}
+    .body-area{margin-top:.8rem;}
+    .body-label{font-family:var(--mono);font-size:.65rem;color:var(--dim);letter-spacing:1px;margin-bottom:.3rem;}
+    .body-input{width:100%;padding:.7rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:.75rem;resize:none;outline:none;line-height:1.6;}
+    .body-input:focus{border-color:var(--cyan);}
+    .response-area{flex:1;overflow-y:auto;padding:1.5rem;}
+    .response-meta{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;}
+    .status-badge{padding:.3rem .8rem;border-radius:4px;font-family:var(--mono);font-size:.78rem;font-weight:700;}
+    .s-200{background:rgba(57,255,133,.15);color:var(--green);}
+    .s-201{background:rgba(57,255,133,.1);color:#22c55e;}
+    .s-400{background:rgba(232,168,48,.15);color:var(--gold);}
+    .s-404{background:rgba(255,71,87,.1);color:#fb923c;}
+    .s-500{background:rgba(255,71,87,.15);color:var(--red);}
+    .resp-time{font-family:var(--mono);font-size:.72rem;color:var(--dim);}
+    .resp-size{font-family:var(--mono);font-size:.72rem;color:var(--dim);}
+    .copy-btn{margin-left:auto;padding:.3rem .7rem;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:.7rem;color:var(--dim);cursor:pointer;transition:all .2s;}
+    .copy-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+    .json-output{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-family:var(--mono);font-size:.78rem;line-height:1.8;white-space:pre-wrap;overflow-x:auto;}
+    .j-key{color:var(--cyan);}
+    .j-str{color:var(--gold);}
+    .j-num{color:var(--purple);}
+    .j-bool{color:var(--green);}
+    .j-null{color:var(--red);}
+    .middleware-log{margin-top:1rem;}
+    .mw-title{font-family:var(--mono);font-size:.65rem;color:var(--dim);letter-spacing:2px;margin-bottom:.5rem;}
+    .mw-item{display:flex;align-items:center;gap:.6rem;padding:.4rem .8rem;background:var(--card);border-radius:4px;margin-bottom:.3rem;border:1px solid var(--border);}
+    .mw-check{color:var(--green);font-size:.8rem;}
+    .mw-cross{color:var(--red);font-size:.8rem;}
+    .mw-text{font-family:var(--mono);font-size:.72rem;color:var(--dim);}
+    .mw-time{font-family:var(--mono);font-size:.68rem;color:#3d4860;margin-left:auto;}
+    .empty-state{text-align:center;padding:4rem 2rem;color:var(--dim);}
+    .empty-state .icon{font-size:3rem;margin-bottom:1rem;opacity:.4;}
+    .empty-state p{font-family:var(--mono);font-size:.82rem;}
+    .rate-limit-bar{display:flex;align-items:center;gap:.8rem;margin-top:.8rem;}
+    .rl-label{font-family:var(--mono);font-size:.68rem;color:var(--dim);}
+    .rl-track{flex:1;height:4px;background:var(--border);border-radius:2px;}
+    .rl-fill{height:100%;border-radius:2px;background:var(--green);transition:width .5s;}
+    .rl-count{font-family:var(--mono);font-size:.68rem;color:var(--dim);}
+    @media(max-width:768px){.layout{grid-template-columns:1fr;height:auto;}.sidebar{height:200px;display:flex;overflow-x:auto;overflow-y:hidden;padding:.5rem;}.sidebar-title{display:none;}.endpoint-group{display:flex;flex-direction:row;margin:0;}.endpoint-item{flex-direction:column;align-items:flex-start;padding:.6rem;min-width:140px;white-space:nowrap;}.endpoint-name{display:none;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">API <span>Explorer</span></div>
+    <a href="../../index.html" class="back-btn">← Portfolio</a>
+  </div>
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-title">ENDPOINTS</div>
+      <div class="endpoint-group">
+        <div class="sidebar-title" style="color:#3d4860;padding-top:1rem;">USERS</div>
+        <div class="endpoint-item active" onclick="selectEndpoint('get-users',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">List Users</div><div class="endpoint-path">/api/users</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('get-user',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">Get User</div><div class="endpoint-path">/api/users/:id</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('create-user',this)">
+          <span class="method m-post">POST</span>
+          <div><div class="endpoint-name">Create User</div><div class="endpoint-path">/api/users</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('update-user',this)">
+          <span class="method m-put">PUT</span>
+          <div><div class="endpoint-name">Update User</div><div class="endpoint-path">/api/users/:id</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('delete-user',this)">
+          <span class="method m-delete">DEL</span>
+          <div><div class="endpoint-name">Delete User</div><div class="endpoint-path">/api/users/:id</div></div>
+        </div>
+      </div>
+      <div class="endpoint-group">
+        <div class="sidebar-title" style="color:#3d4860;padding-top:.5rem;">POSTS</div>
+        <div class="endpoint-item" onclick="selectEndpoint('get-posts',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">List Posts</div><div class="endpoint-path">/api/posts</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('search-posts',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">Search Posts</div><div class="endpoint-path">/api/posts/search</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('create-post',this)">
+          <span class="method m-post">POST</span>
+          <div><div class="endpoint-name">Create Post</div><div class="endpoint-path">/api/posts</div></div>
+        </div>
+      </div>
+      <div class="endpoint-group">
+        <div class="sidebar-title" style="color:#3d4860;padding-top:.5rem;">SYSTEM</div>
+        <div class="endpoint-item" onclick="selectEndpoint('health',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">Health Check</div><div class="endpoint-path">/api/health</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('auth',this)">
+          <span class="method m-post">POST</span>
+          <div><div class="endpoint-name">Auth Token</div><div class="endpoint-path">/api/auth/token</div></div>
+        </div>
+        <div class="endpoint-item" onclick="selectEndpoint('error-test',this)">
+          <span class="method m-get">GET</span>
+          <div><div class="endpoint-name">Error Test</div><div class="endpoint-path">/api/error</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="request-area">
+        <div class="req-header">
+          <div class="req-method m-get" id="reqMethod" style="padding:.5rem .9rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;font-weight:700;">GET</div>
+          <input class="req-url" id="reqUrl" value="https://api.joseph.dev/api/users" readonly/>
+          <button class="send-btn" id="sendBtn" onclick="sendRequest()">Send Request →</button>
+        </div>
+        <div class="params-section" id="paramsSection">
+          <div class="param-group">
+            <span class="param-label">PAGE</span>
+            <input class="param-input" id="paramPage" value="1" style="width:70px;"/>
+          </div>
+          <div class="param-group">
+            <span class="param-label">LIMIT</span>
+            <input class="param-input" id="paramLimit" value="5" style="width:70px;"/>
+          </div>
+          <div class="param-group">
+            <span class="param-label">SORT BY</span>
+            <select class="param-select" id="paramSort">
+              <option>createdAt</option><option>name</option><option>email</option>
+            </select>
+          </div>
+          <div class="param-group">
+            <span class="param-label">ORDER</span>
+            <select class="param-select" id="paramOrder">
+              <option>desc</option><option>asc</option>
+            </select>
+          </div>
+        </div>
+        <div id="bodySection" class="body-area" style="display:none;">
+          <div class="body-label">REQUEST BODY (JSON)</div>
+          <textarea class="body-input" id="bodyInput" rows="4"></textarea>
+        </div>
+        <div class="rate-limit-bar">
+          <span class="rl-label">RATE LIMIT:</span>
+          <div class="rl-track"><div class="rl-fill" id="rlFill" style="width:100%"></div></div>
+          <span class="rl-count" id="rlCount">100/100 requests remaining</span>
+        </div>
+      </div>
+      <div class="response-area" id="responseArea">
+        <div class="empty-state">
+          <div class="icon">⚡</div>
+          <p>Select an endpoint and click "Send Request" to see the response.</p>
+          <p style="margin-top:.5rem;color:#3d4860;font-size:.7rem;">Simulating a production Express.js API with middleware, validation, pagination, and error handling.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let requestCount = 100;
+    let currentEndpoint = 'get-users';
+
+    const endpoints = {
+      'get-users': {method:'GET',url:'/api/users',params:true,body:false},
+      'get-user': {method:'GET',url:'/api/users/:id',params:false,body:false,idParam:true},
+      'create-user': {method:'POST',url:'/api/users',params:false,body:true,bodyDefault:'{\n  "name": "Joseph Odhiambo",\n  "email": "joseph@example.com",\n  "role": "developer"\n}'},
+      'update-user': {method:'PUT',url:'/api/users/:id',params:false,body:true,idParam:true,bodyDefault:'{\n  "name": "Joseph O. Updated",\n  "role": "senior developer"\n}'},
+      'delete-user': {method:'DELETE',url:'/api/users/:id',params:false,body:false,idParam:true},
+      'get-posts': {method:'GET',url:'/api/posts',params:true,body:false},
+      'search-posts': {method:'GET',url:'/api/posts/search?q=nodejs',params:false,body:false},
+      'create-post': {method:'POST',url:'/api/posts',params:false,body:true,bodyDefault:'{\n  "title": "Building REST APIs with Express",\n  "content": "A guide to production-ready APIs...",\n  "category": "tutorial",\n  "tags": ["nodejs","express","api"]\n}'},
+      'health': {method:'GET',url:'/api/health',params:false,body:false},
+      'auth': {method:'POST',url:'/api/auth/token',params:false,body:true,bodyDefault:'{\n  "email": "joseph@example.com",\n  "password": "securepassword"\n}'},
+      'error-test': {method:'GET',url:'/api/error',params:false,body:false,isError:true}
+    };
+
+    const db = {
+      users: [
+        {id:'usr_001',name:'Joseph Onyango',email:'joseph@dev.ke',role:'developer',status:'active',createdAt:'2024-01-15',posts:12,avatar:'JO'},
+        {id:'usr_002',name:'Amara Ndiaye',email:'amara@example.com',role:'admin',status:'active',createdAt:'2024-02-20',posts:8,avatar:'AN'},
+        {id:'usr_003',name:'Kevin Mwangi',email:'kevin@dev.ke',role:'developer',status:'active',createdAt:'2024-03-10',posts:5,avatar:'KM'},
+        {id:'usr_004',name:'Sarah Otieno',email:'sarah@example.com',role:'writer',status:'inactive',createdAt:'2024-04-01',posts:15,avatar:'SO'},
+        {id:'usr_005',name:'David Kamau',email:'david@dev.ke',role:'developer',status:'active',createdAt:'2024-05-12',posts:3,avatar:'DK'},
+      ],
+      posts: [
+        {id:'pst_001',title:'Building Scalable APIs with Node.js',category:'tutorial',author:'usr_001',views:1248,status:'published',createdAt:'2024-12-01'},
+        {id:'pst_002',title:'MongoDB Aggregation Pipelines Deep Dive',category:'database',author:'usr_001',views:897,status:'published',createdAt:'2024-12-05'},
+        {id:'pst_003',title:'React State Management in 2024',category:'frontend',author:'usr_003',views:2341,status:'published',createdAt:'2024-12-10'},
+        {id:'pst_004',title:'Python Data Analysis with Pandas',category:'datascience',author:'usr_002',views:567,status:'draft',createdAt:'2024-12-12'},
+        {id:'pst_005',title:'CSS Grid vs Flexbox: The Definitive Guide',category:'frontend',author:'usr_004',views:1789,status:'published',createdAt:'2024-12-15'},
+      ]
+    };
+
+    function selectEndpoint(key, el) {
+      document.querySelectorAll('.endpoint-item').forEach(e=>e.classList.remove('active'));
+      el.classList.add('active');
+      currentEndpoint = key;
+      const ep = endpoints[key];
+      const methodEl = document.getElementById('reqMethod');
+      methodEl.textContent = ep.method;
+      methodEl.className = 'm-'+ep.method.toLowerCase();
+      methodEl.style.cssText='padding:.5rem .9rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;font-weight:700;';
+      document.getElementById('reqUrl').value = 'https://api.joseph.dev' + ep.url;
+      document.getElementById('paramsSection').style.display = ep.params ? 'flex' : 'none';
+      const bodySection = document.getElementById('bodySection');
+      bodySection.style.display = ep.body ? 'block' : 'none';
+      if(ep.body && ep.bodyDefault) document.getElementById('bodyInput').value = ep.bodyDefault;
+      if(ep.idParam) {
+        const existing = document.getElementById('idParam');
+        if(!existing) {
+          const idGroup = document.createElement('div');
+          idGroup.className = 'param-group'; idGroup.id = 'idParamGroup';
+          idGroup.innerHTML = '<span class="param-label">USER ID</span><input class="param-input" id="idParam" value="usr_001" style="width:90px;"/>';
+          document.getElementById('paramsSection').style.display='flex';
+          document.getElementById('paramsSection').prepend(idGroup);
+        }
+      } else {
+        const eg = document.getElementById('idParamGroup');
+        if(eg) eg.remove();
+      }
+      document.getElementById('responseArea').innerHTML = '<div class="empty-state"><div class="icon">⚡</div><p>Click "Send Request" to execute this endpoint.</p></div>';
+    }
+
+    function syntaxHighlight(json) {
+      return JSON.stringify(json, null, 2)
+        .replace(/("([^"]+)"\s*:)/g, '<span class="j-key">$1</span>')
+        .replace(/:\s*"([^"]*)"/g, ': <span class="j-str">"$1"</span>')
+        .replace(/:\s*(\d+(\.\d+)?)/g, ': <span class="j-num">$1</span>')
+        .replace(/:\s*(true|false)/g, ': <span class="j-bool">$1</span>')
+        .replace(/:\s*(null)/g, ': <span class="j-null">$1</span>');
+    }
+
+    function sendRequest() {
+      if(requestCount <= 0) { alert('Rate limit exceeded (demo). Reloading...'); location.reload(); return; }
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      const ep = endpoints[currentEndpoint];
+      const startTime = Date.now();
+      const latency = 80 + Math.random() * 250;
+
+      setTimeout(() => {
+        requestCount -= 1 + Math.floor(Math.random() * 2);
+        const pct = Math.max(0, (requestCount/100)*100);
+        document.getElementById('rlFill').style.width = pct + '%';
+        document.getElementById('rlFill').style.background = pct < 20 ? '#ff4757' : pct < 50 ? '#e8a830' : '#39ff85';
+        document.getElementById('rlCount').textContent = `${Math.max(0,requestCount)}/100 requests remaining`;
+
+        const elapsed = Math.round(Date.now() - startTime);
+        let responseData, statusCode, statusClass;
+
+        if(ep.isError) {
+          statusCode = 500; statusClass = 's-500';
+          responseData = {success:false,error:'Internal Server Error',message:'An unexpected error occurred on the server.',requestId:'req_'+Math.random().toString(36).slice(2,8),timestamp:new Date().toISOString()};
+        } else if(currentEndpoint==='health') {
+          statusCode = 200; statusClass = 's-200';
+          responseData = {status:'healthy',uptime:'14d 6h 23m',version:'2.4.1',timestamp:new Date().toISOString(),services:{database:'connected',cache:'connected',queue:'connected'},memory:{used:'234MB',total:'512MB',percent:45.7}};
+        } else if(currentEndpoint==='auth') {
+          statusCode = 200; statusClass = 's-200';
+          responseData = {success:true,token:'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InVzcl8wMDEiLCJyb2xlIjoiZGV2ZWxvcGVyIn0.'+Math.random().toString(36).slice(2),expiresIn:'24h',tokenType:'Bearer',user:{id:'usr_001',name:'Joseph Onyango',role:'developer'}};
+        } else if(currentEndpoint==='create-user') {
+          statusCode = 201; statusClass = 's-201';
+          let body = {};
+          try { body = JSON.parse(document.getElementById('bodyInput').value); } catch(e){}
+          responseData = {success:true,message:'User created successfully',data:{...body,id:'usr_'+Math.random().toString(36).slice(2,8),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'active'}};
+        } else if(currentEndpoint==='update-user') {
+          statusCode = 200; statusClass = 's-200';
+          let body = {};
+          try { body = JSON.parse(document.getElementById('bodyInput').value); } catch(e){}
+          const id = document.getElementById('idParam')?.value || 'usr_001';
+          responseData = {success:true,message:'User updated successfully',data:{...db.users[0],...body,id,updatedAt:new Date().toISOString()}};
+        } else if(currentEndpoint==='delete-user') {
+          statusCode = 200; statusClass = 's-200';
+          responseData = {success:true,message:'User deleted successfully',deletedId:document.getElementById('idParam')?.value||'usr_001',timestamp:new Date().toISOString()};
+        } else if(currentEndpoint==='get-user') {
+          const id = document.getElementById('idParam')?.value || 'usr_001';
+          const user = db.users.find(u=>u.id===id);
+          if(user) { statusCode=200; statusClass='s-200'; responseData={success:true,data:user}; }
+          else { statusCode=404; statusClass='s-404'; responseData={success:false,error:'Not Found',message:`User with id '${id}' does not exist`}; }
+        } else if(currentEndpoint==='search-posts') {
+          statusCode=200; statusClass='s-200';
+          responseData={success:true,query:'nodejs',results:db.posts.filter(p=>p.title.toLowerCase().includes('api')||p.title.toLowerCase().includes('node')),total:2,executionTime:'12ms'};
+        } else if(currentEndpoint==='get-posts') {
+          const page=parseInt(document.getElementById('paramPage')?.value||1);
+          const limit=parseInt(document.getElementById('paramLimit')?.value||5);
+          const sort=document.getElementById('paramSort')?.value||'createdAt';
+          const order=document.getElementById('paramOrder')?.value||'desc';
+          statusCode=200; statusClass='s-200';
+          responseData={success:true,data:db.posts.slice(0,limit),pagination:{page,limit,total:db.posts.length,totalPages:Math.ceil(db.posts.length/limit),hasNextPage:page<Math.ceil(db.posts.length/limit),hasPrevPage:page>1},sort:{field:sort,order}};
+        } else {
+          const page=parseInt(document.getElementById('paramPage')?.value||1);
+          const limit=parseInt(document.getElementById('paramLimit')?.value||5);
+          const sort=document.getElementById('paramSort')?.value||'createdAt';
+          const order=document.getElementById('paramOrder')?.value||'desc';
+          statusCode=200; statusClass='s-200';
+          responseData={success:true,data:db.users.slice(0,limit),pagination:{page,limit,total:db.users.length,totalPages:Math.ceil(db.users.length/limit),hasNextPage:false,hasPrevPage:false},sort:{field:sort,order},filters:{}};
+        }
+
+        const jsonStr = syntaxHighlight(responseData);
+        const sizeBytes = JSON.stringify(responseData).length;
+        const middlewareSteps = [
+          {check:true,text:'CORS headers applied',ms:1},
+          {check:true,text:'Rate limiter checked',ms:2},
+          {check:true,text:'Request logged',ms:1},
+          {check:statusCode!==401,text:statusCode===401?'Authentication FAILED':'JWT token validated',ms:3},
+          {check:statusCode!==400,text:statusCode===400?'Validation FAILED':'Input validated',ms:2},
+          {check:true,text:'Route handler executed',ms:Math.round(latency-20)},
+          {check:statusCode!==500,text:statusCode===500?'Error handler triggered':'Response serialized',ms:2},
+        ];
+
+        document.getElementById('responseArea').innerHTML = `
+          <div class="response-meta">
+            <span class="status-badge ${statusClass}">${statusCode} ${statusCode===200?'OK':statusCode===201?'Created':statusCode===404?'Not Found':'Error'}</span>
+            <span class="resp-time">⏱ ${elapsed}ms</span>
+            <span class="resp-size">📦 ${sizeBytes} bytes</span>
+            <button class="copy-btn" onclick="copyResponse()">Copy JSON</button>
+          </div>
+          <div class="json-output">${jsonStr}</div>
+          <div class="middleware-log">
+            <div class="mw-title">MIDDLEWARE PIPELINE</div>
+            ${middlewareSteps.map(s=>`
+              <div class="mw-item">
+                <span class="${s.check?'mw-check':'mw-cross'}">${s.check?'✓':'✗'}</span>
+                <span class="mw-text" style="color:${s.check?'var(--text)':'var(--red)'}">${s.text}</span>
+                <span class="mw-time">+${s.ms}ms</span>
+              </div>`).join('')}
+          </div>`;
+        btn.disabled = false;
+        btn.textContent = 'Send Request →';
+      }, latency);
+    }
+
+    function copyResponse() {
+      const text = document.querySelector('.json-output')?.textContent;
+      if(text) navigator.clipboard.writeText(text);
+      document.querySelector('.copy-btn').textContent = '✓ Copied!';
+      setTimeout(()=>document.querySelector('.copy-btn').textContent='Copy JSON',2000);
+    }
+  </script>
+</body>
+</html>

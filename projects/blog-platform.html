@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERN Blog Platform — Full-Stack Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050f0a;--bg2:#091510;--card:#0d1e15;--cyan:#00e5ff;--green:#39ff14;--text:#e8edf5;--muted:#7a8ba8;--border:rgba(0,229,255,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.mesh{position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 30% 30%,rgba(0,229,255,0.05),transparent),radial-gradient(ellipse 60% 70% at 70% 70%,rgba(57,255,20,0.04),transparent);pointer-events:none}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);background:rgba(5,15,10,0.9);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}.logo span{color:var(--cyan)}
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-btn{font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 16px;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;transition:.2s;text-transform:uppercase;letter-spacing:.06em}
+.nav-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.nav-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
+.back-btn{font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 14px;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.2s}
+.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.main{max-width:1100px;margin:0 auto;padding:40px 20px;display:grid;grid-template-columns:1fr 300px;gap:32px}
+.feed{display:flex;flex-direction:column;gap:20px}
+.post-card{background:var(--card);border:1px solid var(--border);overflow:hidden;transition:.3s;cursor:pointer}
+.post-card:hover{border-color:rgba(0,229,255,.35);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.post-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden}
+.post-body{padding:22px}
+.post-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tag{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:2px 8px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);color:var(--cyan)}
+.post-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+.post-excerpt{font-size:.85rem;color:var(--muted);line-height:1.65;margin-bottom:16px}
+.post-meta{display:flex;align-items:center;justify-content:space-between}
+.post-author{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted)}
+.avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.post-stats{display:flex;gap:12px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)}
+.sidebar{display:flex;flex-direction:column;gap:20px}
+.widget{background:var(--card);border:1px solid var(--border);padding:22px}
+.widget-title{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.search-box{display:flex;gap:0}
+.search-box input{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--border);border-right:none;color:var(--text);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none}
+.search-box input:focus{border-color:var(--cyan)}
+.search-box button{padding:10px 14px;background:var(--cyan);color:#050f0a;border:none;font-weight:700;cursor:pointer;font-size:.85rem}
+.category-list{display:flex;flex-direction:column;gap:6px}
+.cat-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:.2s;font-size:.88rem}
+.cat-item:hover{color:var(--cyan);padding-left:6px}
+.cat-count{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);background:rgba(0,229,255,.06);padding:2px 8px;border:1px solid rgba(0,229,255,.12)}
+.trending{display:flex;flex-direction:column;gap:12px}
+.trend-item{display:flex;gap:12px;cursor:pointer;transition:.2s}
+.trend-item:hover .trend-title{color:var(--cyan)}
+.trend-num{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:600;color:rgba(0,229,255,.2);flex-shrink:0;line-height:1}
+.trend-title{font-size:.85rem;line-height:1.4;font-weight:500}
+.trend-date{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:3px}
+/* Auth Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);padding:36px;width:100%;max-width:400px}
+.modal h2{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:6px}
+.modal p{color:var(--muted);font-size:.87rem;margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-family:'JetBrains Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text);padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:.3s}
+.form-group input:focus{border-color:var(--cyan)}
+.modal-btn{width:100%;padding:12px;background:var(--cyan);color:#050f0a;border:none;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;transition:.3s}
+.modal-btn:hover{box-shadow:0 0 30px rgba(0,229,255,.4)}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1}
+.modal-toggle{text-align:center;margin-top:14px;font-size:.83rem;color:var(--muted)}
+.modal-toggle a{color:var(--cyan);cursor:pointer;text-decoration:underline}
+/* Full Post View */
+.post-view{display:none;max-width:800px;margin:0 auto;padding:40px 20px}
+.post-view.open{display:block}
+.main.hidden{display:none}
+.post-full-title{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:800;margin:20px 0 12px;letter-spacing:-.03em}
+.post-full-body{color:var(--text);line-height:1.85;font-size:.95rem}
+.post-full-body p{margin-bottom:16px}
+.post-full-body h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin:24px 0 12px;color:var(--cyan)}
+.comments{margin-top:40px}
+.comment{background:var(--card);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.comment-meta{display:flex;justify-content:space-between;margin-bottom:8px}
+.comment-author{font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--cyan)}
+.comment-date{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)}
+.comment-text{font-size:.87rem;color:var(--text);line-height:1.6}
+.comment-form{margin-top:20px}
+.comment-form textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text);padding:12px;font-family:'DM Sans',sans-serif;font-size:.88rem;resize:none;height:90px;outline:none;margin-bottom:10px;transition:.3s}
+.comment-form textarea:focus{border-color:var(--cyan)}
+.comment-btn{font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:9px 20px;background:var(--cyan);color:#050f0a;border:none;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+@media(max-width:700px){.main{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<nav>
+  <div class="logo">dev<span>blog</span></div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="openModal('login')">Login</button>
+    <button class="nav-btn active" onclick="openModal('register')">Register</button>
+    <a href="../index.html" class="back-btn">← Portfolio</a>
+  </div>
+</nav>
+
+<div class="main" id="mainView">
+  <div class="feed" id="feed"></div>
+  <div class="sidebar">
+    <div class="widget">
+      <div class="widget-title">Search Posts</div>
+      <div class="search-box">
+        <input type="text" placeholder="Search..." id="searchInput" oninput="filterPosts()">
+        <button>🔍</button>
+      </div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Categories</div>
+      <div class="category-list" id="catList"></div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">Trending</div>
+      <div class="trending" id="trending"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Full Post -->
+<div class="post-view" id="postView">
+  <a href="#" onclick="closeFull()" style="font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px">← Back to Feed</a>
+  <div id="postContent"></div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Sign In</h2>
+    <p id="modalSub">Welcome back to devblog</p>
+    <div id="modalFields">
+      <div class="form-group"><label>Email</label><input type="email" placeholder="you@example.com" id="authEmail"></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••" id="authPwd"></div>
+    </div>
+    <button class="modal-btn" onclick="authenticate()">Sign In →</button>
+    <p class="modal-toggle">No account? <a onclick="switchModal()">Create one</a></p>
+  </div>
+</div>
+
+<script>
+const posts = [
+  {id:1,title:"Building Scalable REST APIs with Node.js & Express",excerpt:"Deep dive into architecting production-ready APIs with middleware chains, proper error handling, and rate limiting strategies.",tags:["Node.js","Backend","API"],category:"Backend",author:"Joseph O.",date:"Dec 12, 2024",emoji:"⚡",color:"#0a1e0a",accent:"#39ff14",views:2847,comments:24,readTime:"8 min",body:`<p>Building a REST API that scales from 100 to 100,000 users requires intentional design decisions from day one. In this post, I'll share the architectural patterns I've learned building production systems.</p><h3>1. Middleware Architecture</h3><p>Think of middleware as a processing pipeline. Each function receives the request, does something with it, and passes it forward. The order matters — authentication before authorization, logging before business logic.</p><h3>2. Error Handling</h3><p>Never let an unhandled rejection crash your server. Centralized error handling with proper status codes and consistent error shapes makes debugging 10x faster for everyone on the team.</p><h3>3. Rate Limiting</h3><p>Protect your API from abuse with sliding window rate limiting. Redis-based solutions scale horizontally across multiple server instances without coordination overhead.</p>`},
+  {id:2,title:"MongoDB Aggregation Pipelines: From Beginner to Expert",excerpt:"Master the aggregation framework with real-world examples — from simple group operations to complex multi-stage transformations.",tags:["MongoDB","Database","NoSQL"],category:"Database",author:"Joseph O.",date:"Dec 8, 2024",emoji:"🗄️",color:"#0e1a00",accent:"#39ff14",views:1923,comments:17,readTime:"12 min",body:`<p>MongoDB's aggregation pipeline is one of the most powerful data processing tools available to developers. Understanding it unlocks capabilities that raw queries simply can't achieve.</p><h3>The Pipeline Concept</h3><p>Think of the pipeline as a series of data transformation stages. Each stage receives documents from the previous one and outputs transformed documents to the next.</p><h3>Essential Operators</h3><p>The $match, $group, $project, $sort, and $lookup operators cover 90% of real-world use cases. Master these before moving to advanced operators like $facet and $bucket.</p><h3>Performance Optimization</h3><p>Always place $match and $limit stages as early in the pipeline as possible to reduce the number of documents flowing through subsequent stages.</p>`},
+  {id:3,title:"React State Management: Context vs. Zustand vs. Redux",excerpt:"A pragmatic comparison of state management approaches in React — when to use each and the tradeoffs involved.",tags:["React","JavaScript","Frontend"],category:"Frontend",author:"Joseph O.",date:"Dec 5, 2024",emoji:"⚛️",color:"#00081a",accent:"#00e5ff",views:3412,comments:31,readTime:"10 min",body:`<p>State management is one of the most debated topics in React development. The honest answer? It depends on your application's complexity and your team's familiarity.</p><h3>React Context + useReducer</h3><p>For small to medium apps, the built-in Context API combined with useReducer is often more than sufficient. The pattern is familiar, requires no extra dependencies, and is perfectly adequate for most use cases.</p><h3>Zustand</h3><p>When you need something more powerful without Redux's ceremony, Zustand is the sweet spot. Minimal API, excellent TypeScript support, and devtools integration.</p><h3>Redux Toolkit</h3><p>For large-scale enterprise apps with complex state interactions and large teams, Redux Toolkit's opinionated structure and excellent debugging tools justify the complexity.</p>`},
+  {id:4,title:"Building an AI-Powered App with Claude's API",excerpt:"A walkthrough of integrating Claude's AI capabilities into a full-stack web application, covering prompting strategies and UX.",tags:["AI","JavaScript","API"],category:"AI",author:"Joseph O.",date:"Nov 28, 2024",emoji:"🤖",color:"#0e001a",accent:"#b44fff",views:4218,comments:43,readTime:"15 min",body:`<p>Integrating AI into your web application is now accessible to every developer. In this post I'll walk through building a real AI feature — from prompt engineering to polished UX.</p><h3>Prompt Engineering</h3><p>The quality of your AI feature depends heavily on your system prompt. Be specific about tone, format, length constraints, and what the model should and shouldn't do.</p><h3>Streaming Responses</h3><p>For long AI-generated content, streaming creates a dramatically better user experience. Users see text appear in real-time rather than waiting for a complete response.</p><h3>Error States</h3><p>AI APIs can fail, timeout, or return unexpected formats. Build robust error handling and fallback states from the start — your users will thank you.</p>`}
+];
+
+const categories = ['All','Frontend','Backend','Database','AI'];
+let activeCategory = 'All';
+
+function renderFeed(filtered) {
+  const feed = document.getElementById('feed');
+  const data = filtered || posts;
+  feed.innerHTML = '';
+  data.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    card.innerHTML = `
+      <div class="post-img" style="background:linear-gradient(135deg,${p.color},${p.color}dd)">
+        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,${p.accent}22,transparent 70%)"></div>
+        <span style="position:relative;z-index:1;filter:drop-shadow(0 0 20px ${p.accent})">${p.emoji}</span>
+      </div>
+      <div class="post-body">
+        <div class="post-tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <h2 class="post-title">${p.title}</h2>
+        <p class="post-excerpt">${p.excerpt}</p>
+        <div class="post-meta">
+          <div class="post-author"><div class="avatar" style="background:linear-gradient(135deg,#00e5ff,#0050ff)">${p.author[0]}</div><span>${p.author}</span><span style="color:var(--muted);font-size:.75rem">· ${p.date}</span></div>
+          <div class="post-stats"><span>👁 ${p.views.toLocaleString()}</span><span>💬 ${p.comments}</span><span>⏱ ${p.readTime}</span></div>
+        </div>
+      </div>`;
+    card.onclick = () => openPost(p);
+    feed.appendChild(card);
+  });
+}
+
+function renderSidebar() {
+  const catList = document.getElementById('catList');
+  categories.forEach(c => {
+    const count = c === 'All' ? posts.length : posts.filter(p => p.category === c).length;
+    const item = document.createElement('div');
+    item.className = 'cat-item';
+    item.innerHTML = `<span>${c}</span><span class="cat-count">${count}</span>`;
+    item.onclick = () => { activeCategory = c; filterPosts(); };
+    catList.appendChild(item);
+  });
+  const trending = document.getElementById('trending');
+  [...posts].sort((a,b)=>b.views-a.views).slice(0,3).forEach((p,i) => {
+    const item = document.createElement('div');
+    item.className = 'trend-item';
+    item.innerHTML = `<div class="trend-num">0${i+1}</div><div><div class="trend-title">${p.title}</div><div class="trend-date">${p.date}</div></div>`;
+    item.onclick = () => openPost(p);
+    trending.appendChild(item);
+  });
+}
+
+function filterPosts() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = posts;
+  if (activeCategory !== 'All') filtered = filtered.filter(p => p.category === activeCategory);
+  if (query) filtered = filtered.filter(p => p.title.toLowerCase().includes(query) || p.excerpt.toLowerCase().includes(query));
+  renderFeed(filtered);
+}
+
+function openPost(p) {
+  document.getElementById('mainView').classList.add('hidden');
+  const view = document.getElementById('postView');
+  view.classList.add('open');
+  document.getElementById('postContent').innerHTML = `
+    <div class="post-tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <h1 class="post-full-title">${p.title}</h1>
+    <div class="post-meta" style="margin-bottom:28px;font-size:.85rem;color:var(--muted)">
+      ${p.author} · ${p.date} · ${p.readTime} read · 👁 ${p.views.toLocaleString()} · 💬 ${p.comments} comments
+    </div>
+    <div class="post-full-body">${p.body}</div>
+    <div class="comments">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px">Comments (${p.comments})</div>
+      <div id="commentsList">
+        ${generateComments(p.comments)}
+      </div>
+      <div class="comment-form">
+        <textarea placeholder="Add a comment..."></textarea>
+        <button class="comment-btn" onclick="addComment(this)">Post Comment</button>
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
+function generateComments(n) {
+  const names = ['dev_sarah','code_jones','fullstack_k','react_lover','backend_pro'];
+  const comments = ['Great explanation! The middleware section was especially helpful.','I have been looking for this. The aggregation pipeline examples are solid.','Thanks for sharing. Would love to see a follow-up on TypeScript integration.','Bookmarking this. Really clear writing.'];
+  return Array.from({length:Math.min(n,4)},(_,i)=>`
+    <div class="comment">
+      <div class="comment-meta"><span class="comment-author">~${names[i]}</span><span class="comment-date">${3+i*2} days ago</span></div>
+      <div class="comment-text">${comments[i]}</div>
+    </div>`).join('');
+}
+
+function addComment(btn) {
+  const ta = btn.previousElementSibling;
+  if (!ta.value.trim()) return;
+  const list = document.getElementById('commentsList');
+  const c = document.createElement('div');
+  c.className = 'comment';
+  c.style.borderColor = 'rgba(0,229,255,.3)';
+  c.innerHTML = `<div class="comment-meta"><span class="comment-author" style="color:#00e5ff">~you</span><span class="comment-date">Just now</span></div><div class="comment-text">${ta.value}</div>`;
+  list.insertBefore(c, list.firstChild);
+  ta.value = '';
+}
+
+function closeFull() {
+  document.getElementById('mainView').classList.remove('hidden');
+  document.getElementById('postView').classList.remove('open');
+  return false;
+}
+
+let isLogin = true;
+function openModal(type) { isLogin = type==='login'; updateModal(); document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function updateModal() {
+  document.getElementById('modalTitle').textContent = isLogin ? 'Sign In' : 'Create Account';
+  document.getElementById('modalSub').textContent = isLogin ? 'Welcome back to devblog' : 'Join the developer community';
+  document.querySelector('.modal-toggle').innerHTML = isLogin ? `No account? <a onclick="switchModal()">Create one</a>` : `Have an account? <a onclick="switchModal()">Sign in</a>`;
+  document.querySelector('.modal-btn').textContent = isLogin ? 'Sign In →' : 'Create Account →';
+  const fields = document.getElementById('modalFields');
+  if (!isLogin && !document.getElementById('authName')) {
+    const g = document.createElement('div'); g.className = 'form-group';
+    g.innerHTML = '<label>Username</label><input type="text" id="authName" placeholder="cooldev123">';
+    fields.insertBefore(g, fields.firstChild);
+  } else if (isLogin && document.getElementById('authName')) {
+    document.getElementById('authName').parentElement.remove();
+  }
+}
+function switchModal() { isLogin = !isLogin; updateModal(); }
+function authenticate() {
+  const email = document.getElementById('authEmail').value;
+  if (!email) { alert('Please enter your email.'); return; }
+  closeModal();
+  document.querySelector('.nav-right').innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:7px 16px;border:1px solid rgba(57,255,20,.3);color:var(--green)">✓ Logged in</div><a href="../index.html" class="back-btn" style="font-family:'JetBrains Mono',monospace;font-size:.73rem;padding:7px 14px;border:1px solid var(--border);color:var(--muted);text-decoration:none">← Portfolio</a>`;
+}
+
+renderFeed(); renderSidebar();
+</script>
+</body>
+</html>

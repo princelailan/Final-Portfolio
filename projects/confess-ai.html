@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confess.AI — Anonymous AI Advice Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060910;--bg2:#0d1220;--card:#111826;--cyan:#00e5ff;--purple:#b44fff;--green:#39ff14;--orange:#ff6b35;--text:#e8edf5;--muted:#7a8ba8;--border:rgba(0,229,255,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+.mesh{position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(180,79,255,0.08),transparent),radial-gradient(ellipse 60% 80% at 80% 80%,rgba(0,229,255,0.06),transparent);pointer-events:none}
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border);background:rgba(6,9,16,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem}.logo span{color:var(--purple)}
+.back-btn{font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:8px 16px;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.3s;text-transform:uppercase;letter-spacing:.08em}
+.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.hero{text-align:center;padding:60px 20px 40px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--purple);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
+h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.03em;margin-bottom:12px}
+h1 span{color:var(--purple)}
+.sub{color:var(--muted);font-size:1rem;max-width:500px;margin:0 auto 40px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:4px 12px;background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.25);color:var(--green);margin-bottom:32px}
+.badge::before{content:'';width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+.app{max-width:860px;margin:0 auto;padding:0 20px 60px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.panel{background:var(--card);border:1px solid var(--border);padding:28px}
+.panel-title{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.panel-title::before{content:'';display:block;width:3px;height:14px;background:var(--cyan)}
+.category-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.cat-btn{font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:8px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:.2s;text-align:center}
+.cat-btn:hover,.cat-btn.active{border-color:var(--purple);color:var(--purple);background:rgba(180,79,255,.08)}
+textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text);padding:14px;font-family:'DM Sans',sans-serif;font-size:.9rem;resize:none;height:120px;outline:none;transition:.3s}
+textarea:focus{border-color:var(--purple)}
+.anon-toggle{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:.85rem;color:var(--muted)}
+.toggle{width:40px;height:22px;background:rgba(180,79,255,.3);border-radius:11px;position:relative;cursor:pointer;transition:.3s;border:1px solid rgba(180,79,255,.4)}
+.toggle.on{background:rgba(180,79,255,.7)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.3s}
+.toggle.on::after{transform:translateX(18px)}
+.submit-btn{width:100%;padding:13px;background:var(--purple);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.3s;margin-top:8px}
+.submit-btn:hover{background:#c562ff;box-shadow:0 0 30px rgba(180,79,255,.4)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.char-count{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);text-align:right;margin-top:4px}
+.response-area{min-height:200px;display:flex;align-items:center;justify-content:center}
+.response-placeholder{text-align:center;color:var(--muted);font-size:.9rem}
+.response-placeholder .icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+.ai-response{display:none;width:100%}
+.ai-response .meta{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ai-avatar{width:32px;height:32px;background:linear-gradient(135deg,#b44fff,#6b35ff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+.ai-name{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--purple)}
+.ai-text{color:var(--text);font-size:.88rem;line-height:1.75;white-space:pre-wrap}
+.typing{display:inline-block;width:8px;height:16px;background:var(--purple);animation:blink .7s step-end infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.feed-panel{grid-column:1/-1;background:var(--card);border:1px solid var(--border);padding:28px}
+.confessions-list{display:flex;flex-direction:column;gap:12px;max-height:320px;overflow-y:auto}
+.confession-item{background:rgba(0,0,0,.3);border:1px solid var(--border);border-left:3px solid var(--purple);padding:16px;transition:.2s}
+.confession-item:hover{border-color:rgba(180,79,255,.4);background:rgba(180,79,255,.04)}
+.c-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.c-cat{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:2px 8px;background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.2);color:var(--purple)}
+.c-anon{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)}
+.c-text{font-size:.85rem;color:var(--text);line-height:1.6;margin-bottom:8px}
+.c-reply{font-size:.82rem;color:var(--muted);line-height:1.6;padding-top:8px;border-top:1px solid var(--border)}
+.c-reply strong{color:var(--purple)}
+.plan-row{display:flex;gap:12px;grid-column:1/-1;margin-top:0}
+.plan-card{flex:1;background:var(--card);border:1px solid var(--border);padding:22px;text-align:center;transition:.3s}
+.plan-card:hover{border-color:rgba(180,79,255,.3);transform:translateY(-2px)}
+.plan-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:6px}
+.plan-price{font-family:'JetBrains Mono',monospace;font-size:1.5rem;color:var(--cyan);font-weight:600;margin-bottom:12px}
+.plan-price span{font-size:.8rem;color:var(--muted)}
+.plan-feat{font-size:.8rem;color:var(--muted);line-height:1.8}
+.plan-btn{display:block;margin-top:16px;padding:9px;border:1px solid var(--purple);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:.72rem;text-transform:uppercase;cursor:pointer;background:transparent;width:100%;transition:.3s}
+.plan-btn:hover{background:var(--purple);color:#fff}
+.plan-card.featured{border-color:rgba(180,79,255,.4);background:rgba(180,79,255,.04)}
+@media(max-width:700px){.app{grid-template-columns:1fr}.plan-row{flex-direction:column}.category-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<nav>
+  <div class="logo">confess<span>.AI</span></div>
+  <a href="../index.html" class="back-btn">← Portfolio</a>
+</nav>
+
+<div class="hero">
+  <p class="tag">// AI-powered confession platform</p>
+  <h1>Confess.<span>AI</span></h1>
+  <p class="sub">Share anonymously. Get real AI-powered advice. No judgment, no identity.</p>
+  <div class="badge">Live Demo Active</div>
+</div>
+
+<div class="app">
+  <!-- Submit Panel -->
+  <div class="panel">
+    <div class="panel-title">Submit a Confession</div>
+    <div class="category-grid">
+      <button class="cat-btn active" onclick="selectCat(this,'Relationships')">💔 Relationships</button>
+      <button class="cat-btn" onclick="selectCat(this,'Career')">💼 Career</button>
+      <button class="cat-btn" onclick="selectCat(this,'Family')">👨‍👩‍👧 Family</button>
+      <button class="cat-btn" onclick="selectCat(this,'Personal')">🧠 Personal</button>
+    </div>
+    <textarea id="confessionText" placeholder="What's on your mind? Share it anonymously and get AI-powered advice..." oninput="updateCount()"></textarea>
+    <div class="char-count"><span id="charCount">0</span>/500</div>
+    <div class="anon-toggle">
+      <div class="toggle on" id="anonToggle" onclick="this.classList.toggle('on')"></div>
+      <span>Post anonymously</span>
+    </div>
+    <button class="submit-btn" onclick="submitConfession()">Get AI Advice →</button>
+  </div>
+
+  <!-- AI Response Panel -->
+  <div class="panel">
+    <div class="panel-title">AI Response</div>
+    <div class="response-area" id="responseArea">
+      <div class="response-placeholder">
+        <div class="icon">🤖</div>
+        <p>Your AI advisor is waiting.</p>
+        <p style="font-size:.8rem;margin-top:6px">Submit a confession to receive personalized advice.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Feed -->
+  <div class="feed-panel">
+    <div class="panel-title">Anonymous Feed</div>
+    <div class="confessions-list" id="feed"></div>
+  </div>
+
+  <!-- Pricing -->
+  <div class="plan-row">
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0 <span>/mo</span></div>
+      <div class="plan-feat">3 confessions/day<br>Basic AI responses<br>Anonymous posting<br>Public feed access</div>
+      <button class="plan-btn">Current Plan</button>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-name" style="color:var(--purple)">Pro ✦</div>
+      <div class="plan-price">$9 <span>/mo</span></div>
+      <div class="plan-feat">Unlimited confessions<br>Deep AI analysis<br>Private responses<br>Theme customization</div>
+      <button class="plan-btn" onclick="alert('Pro plan coming soon!')">Upgrade to Pro</button>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Team</div>
+      <div class="plan-price">$29 <span>/mo</span></div>
+      <div class="plan-feat">Team dashboard<br>Analytics &amp; insights<br>Custom AI persona<br>Priority support</div>
+      <button class="plan-btn" onclick="alert('Team plan coming soon!')">Get Team</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedCat = 'Relationships';
+const aiResponses = {
+  Relationships:["It sounds like you're carrying a heavy emotional burden. The fact that you're reflecting on this shows real self-awareness. Consider having an honest, calm conversation where you lead with 'I feel' statements rather than accusations. Relationships thrive on vulnerability — it might be the connection you both need.","What you're feeling is completely valid. Distance in relationships often comes from unspoken expectations. Try identifying one specific thing that changed, and gently bring it up. Small, consistent acts of care can rebuild what feels broken."],
+  Career:["Imposter syndrome is incredibly common among high-achievers — it often means you care deeply. Document your wins, even small ones. Evidence of your past success is the antidote to doubt. Consider speaking to a mentor who's been where you are.","It's normal to feel stuck. A job should align with your values, not just pay the bills. Try mapping out what energizes you vs what drains you. That clarity often points toward the right next step, even if it's scary."],
+  Family:["Family dynamics can be the most complex relationships we navigate. Setting boundaries isn't about love — it's about sustainability. You can love someone deeply and still protect your own mental health. That's not selfish; it's necessary.","Generational differences in family can create real tension. Remember that people often act from their own unhealed wounds. This doesn't excuse harm, but it can help you respond with less reactivity and more clarity."],
+  Personal:["Growth is uncomfortable by design. The version of yourself you're becoming requires leaving behind who you were. That discomfort is not a sign you're failing — it's a sign you're evolving. Trust the process a little longer.","Self-doubt often speaks loudest right before a breakthrough. The things we fear most about ourselves are rarely as visible to others as they feel to us. Treat yourself with the same compassion you'd give a close friend."]
+};
+
+const sampleFeed = [
+  {cat:'Career',anon:'user_4k9x',text:"I've been faking confidence at work for 2 years. Everyone thinks I'm senior. I feel like a fraud every single day.",reply:"What you're describing is imposter syndrome — experienced by 70% of professionals. Your consistent performance proves your capability. The fraud feeling means you have standards. Keep going."},
+  {cat:'Relationships',anon:'user_7m2p',text:"I ghosted someone who genuinely cared about me because I was scared. Now they've moved on and I can't stop thinking about it.",reply:"Avoidance feels safe but rarely is. This experience is teaching you something about fear and connection. The lesson: courage in relationships means showing up even when it's terrifying."},
+  {cat:'Personal',anon:'user_1z8q',text:"I started from zero three times in my life. I'm starting over again at 26 and I'm exhausted but I won't quit.",reply:"Three restarts isn't failure — it's exceptional resilience. Most people stop at one. Your capacity to rebuild is genuinely rare. This time you have all the wisdom from before. That changes everything."}
+];
+
+function selectCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); selectedCat = cat;
+}
+function updateCount() {
+  const len = document.getElementById('confessionText').value.length;
+  document.getElementById('charCount').textContent = Math.min(len, 500);
+}
+
+function submitConfession() {
+  const text = document.getElementById('confessionText').value.trim();
+  if (!text) { alert('Please write something first.'); return; }
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = 'Analyzing...'; btn.disabled = true;
+  const area = document.getElementById('responseArea');
+  area.innerHTML = '<div style="text-align:center;padding:20px"><div class="typing"></div><p style="margin-top:12px;color:var(--muted);font-size:.85rem">AI is processing your confession...</p></div>';
+  const responses = aiResponses[selectedCat] || aiResponses['Personal'];
+  const reply = responses[Math.floor(Math.random() * responses.length)];
+  setTimeout(() => {
+    area.innerHTML = `<div class="ai-response" style="display:block;width:100%">
+      <div class="meta"><div class="ai-avatar">AI</div><span class="ai-name">Confess.AI Advisor · ${selectedCat}</span></div>
+      <div class="ai-text" id="streamText"></div></div>`;
+    streamText(reply, document.getElementById('streamText'), () => {
+      btn.textContent = 'Get AI Advice →'; btn.disabled = false;
+      addToFeed(text, reply);
+    });
+  }, 1200);
+}
+
+function streamText(text, el, cb) {
+  let i = 0;
+  el.innerHTML = '<span class="typing"></span>';
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      el.textContent = text.substring(0, ++i);
+      el.innerHTML += '<span class="typing"></span>';
+    } else { clearInterval(interval); el.textContent = text; if(cb) cb(); }
+  }, 18);
+}
+
+function addToFeed(text, reply) {
+  const feed = document.getElementById('feed');
+  const item = document.createElement('div');
+  item.className = 'confession-item';
+  const anon = 'user_' + Math.random().toString(36).substr(2,4);
+  item.innerHTML = `<div class="c-meta"><span class="c-cat">${selectedCat}</span><span class="c-anon">~${anon}</span></div>
+    <div class="c-text">${text.substring(0,150)}${text.length>150?'...':''}</div>
+    <div class="c-reply"><strong>AI:</strong> ${reply.substring(0,120)}...</div>`;
+  feed.insertBefore(item, feed.firstChild);
+  document.getElementById('confessionText').value = '';
+  document.getElementById('charCount').textContent = '0';
+}
+
+// Populate initial feed
+window.onload = () => {
+  const feed = document.getElementById('feed');
+  sampleFeed.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'confession-item';
+    item.innerHTML = `<div class="c-meta"><span class="c-cat">${c.cat}</span><span class="c-anon">~${c.anon}</span></div>
+      <div class="c-text">${c.text}</div>
+      <div class="c-reply"><strong>AI:</strong> ${c.reply}</div>`;
+    feed.appendChild(item);
+  });
+};
+</script>
+</body>
+</html>
